@@ -456,8 +456,7 @@
                                     { label: '현장명', name: 'siteName', icon: 'map-pin' },
                                     { label: '공사일정', name: 'workDate', icon: 'calendar', type: 'date' },
                                     { label: '예산(만원)', name: 'budget', icon: 'wallet', type: 'number' },
-                                    { label: '가족인원', name: 'familyCount', icon: 'users', type: 'number' },
-                                    { label: '평수', name: 'area', icon: 'home', type: 'number', suffix: '평' }
+                                    { label: '가족인원', name: 'familyCount', icon: 'users', type: 'number' }
                                 ].map(f => (
                                     <div key={f.name} className="group relative bg-slate-50/50 rounded-2xl border border-transparent focus-within:border-blue-200 focus-within:bg-white transition-all p-4">
                                         <div className="flex items-center gap-3 mb-1">
@@ -466,13 +465,22 @@
                                         </div>
                                         <div className="relative">
                                             <input type={f.type || 'text'} name={f.name} value={formData[f.name]} onChange={handleInputChange} className="w-full bg-transparent outline-none text-sm font-black text-slate-800" />
-                                            {f.suffix && <span className="absolute right-0 top-0 text-sm font-black text-slate-400">{f.suffix}</span>}
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 font-bold relative z-10">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-6 font-bold relative z-10">
+                                <div className="group relative bg-slate-50/50 rounded-2xl border border-transparent focus-within:border-blue-200 focus-within:bg-white transition-all p-4">
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <Icon name="home" size={14} className="text-slate-300 group-focus-within:text-blue-500 transition-colors" />
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">평수</span>
+                                    </div>
+                                    <div className="relative">
+                                        <input type="number" name="area" value={formData.area} onChange={handleInputChange} className="w-full bg-transparent outline-none text-sm font-black text-slate-800" />
+                                        <span className="absolute right-0 top-0 text-sm font-black text-slate-400">평</span>
+                                    </div>
+                                </div>
                                 <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
                                     <span className="text-[10px] font-black text-slate-400 uppercase mb-3 block tracking-tighter font-sans">공사 목적</span>
                                     <div className="flex gap-4">
@@ -491,11 +499,16 @@
                                             {['아파트', '주택', '빌라', '상가', '기타'].map(type => (<option key={type} value={type}>{type}</option>))}
                                         </select>
                                         <div className="w-[1px] h-4 bg-slate-200"></div>
-                                        <input type="text" name="floorInfo" value={formData.floorInfo} onChange={handleInputChange} placeholder="00층" className="w-12 bg-transparent text-xs font-black text-blue-600 text-center outline-none" />
+                                        <div className="flex items-center gap-1">
+                                            <input type="text" name="floorInfo" value={formData.floorInfo} onChange={handleInputChange} placeholder="00" className="w-10 bg-transparent text-xs font-black text-blue-600 text-center outline-none" />
+                                            <span className="text-xs font-black text-blue-600">(층)</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex items-center justify-around gap-2 font-sans font-bold">
+                                <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex items-center justify-center gap-2 font-sans font-bold">
                                     <label className="flex items-center gap-2 cursor-pointer font-bold"><Icon name="arrow-up-square" size={16} className={formData.hasElevator ? "text-blue-500" : "text-slate-300"}/><input type="checkbox" name="hasElevator" checked={formData.hasElevator} onChange={handleInputChange} className="w-4 h-4 rounded text-blue-500" /><span className={`text-xs font-black ${formData.hasElevator ? 'text-blue-600' : 'text-slate-400'}`}>엘리베이터</span></label>
+                                </div>
+                                <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex items-center justify-center gap-2 font-sans font-bold">
                                     <label className="flex items-center gap-2 cursor-pointer font-bold"><Icon name="thermometer-snowflake" size={16} className={formData.isOuterWall ? "text-red-500" : "text-slate-300"}/><input type="checkbox" name="isOuterWall" checked={formData.isOuterWall} onChange={handleInputChange} className="w-4 h-4 rounded text-red-500" /><span className={`text-xs font-black ${formData.isOuterWall ? 'text-red-600' : 'text-slate-400'}`}>외벽 라인</span></label>
                                 </div>
                             </div>
