@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>토토디자인 통합 관리 시스템 Pro</title>
+    <!-- 라이브러리 로드 -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; overflow-x: hidden; }
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        @media print { .no-print { display: none !important; } }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Lucide 아이콘 컴포넌트
+        const Icon = ({ name, size = 20, className = "" }) => {
+            React.useEffect(() => { lucide.createIcons(); });
+            return <i data-lucide={name} className={className} style={{ width: size, height: size, display: 'inline-block' }}></i>;
+        };
+
+        const SPACES = ['전체', '거실', '안방', '주방', '현관', '발코니', '기타'];
+
+        const App = () => {
+            // --- 1. 상태 관리 ---
+            const [activeMode, setActiveMode] = React.useState('meeting'); // 'meeting' or 'quote'
+            const [siteSize, setSiteSize] = React.useState("");
+            const [selectedItems, setSelectedItems] = React.useState([]); // 견적서 항목
+            
+            const [formData, setFormData] = React.useState({
+                customerName: '', contact: '', siteName: '', workDate: '', budget: '', familyCount: '',
+                consultantName: '', residenceStatus: '공실', buildingType: '아파트', residencePurpose: '주거용',
+                floorInfo: '', isOuterWall: false, hasElevator: false, notes: '', scope: '전체', demoNotes: '',
+                windowBrand: '', extensions: [], kitchenAppliances: [], kitchenType: '일반 구조',
+                kitchenHardware: '표준', kitchenCountertop: '인조대리석', activeFinishSpace: '전체',
+                finishesBySpace: SPACES.reduce((acc, s) => ({
+                    ...acc, [s]: { floor: '강마루', floorOption: '표준', wall: '실크벽지', wallpaperType: '일반실크(베스트)', ceiling: '실크벽지' }
+                }), {}),
+                activeDetailSpace: '전체',
+                detailsBySpace: SPACES.reduce((acc, s) => ({
+                    ...acc, [s]: { lighting: [], electrical: [], carpentry: [], lightingLocations: {} }
+                }), {}),
+                publicBath: { toilet: '표준형', sink: '표준형', sinkFaucet: '표준형', isSinkFaucetEmbedded: false, tubFaucet: '표준형', showerHead: '표준형', tub: '미선택', partition: '미선택' },
+                masterBath: { toilet: '표준형', sink: '표준형', sinkFaucet: '표준형', isSinkFaucetEmbedded: false, tubFaucet: '표준형', showerHead: '표준형', tub: '미선택', partition: '미선택' },
+                entranceDoor: '미선택', doorStyle: '미선택', doorHandle: '일반', moldingType: '미선택', skirtingType: '미선택'
+            });
+
+            // --- 2. 마스터 데이터 (견적 연동용 샘플) ---
+            const MASTER_DB = [
+                { id: 'm1', cat: '마루 공사', name: '강마루 시공', spec: '표준형', unit: '평', price: 120000, logic: 'PY_1X' },
+                { id: 'm2', cat: '도배 공사', name: '실크벽지 도배', spec: '일반실크', unit: '평', price: 45000, logic: 'WALL_35' },
+                { id: 'm3', cat: '욕실 공사', name: '욕실 리모델링 패키지', spec: '표준형', unit: '개소', price: 3500000, logic: 'MANUAL' },
+                { id: 'm4', cat: '가설/철거', name: '전체 철거 및 폐기물', spec: '현장 전체', unit: '평', price: 150000, logic: 'PY_1X' }
+            ];
+
+            // --- 3. 계산 로직 ---
+            const totals = React.useMemo(() => {
+                const direct = selectedItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                const exp = Math.round(direct * 0.05);
+                const profit = Math.round(direct * 0.1);
+                return { direct, exp, profit, grand: direct + exp + profit };
+            }, [selectedItems]);
+
+            // --- 4. 핸들러 ---
+            const handleInputChange = (e) => {
+                const { name, value, type, checked } = e.target;
+                setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+            };
+
+            const handleFinishChange = (key, value) => {
+                const space = formData.activeFinishSpace;
+                setFormData(prev => ({
+                    ...prev,
+                    finishesBySpace: { ...prev.finishesBySpace, [space]: { ...prev.finishesBySpace[space], [key]: value } }
+                }));
+            };
+
+            const handleBathChange = (type, key, value) => {
+                setFormData(prev => ({ ...prev, [type]: { ...prev[type], [key]: value } }));
+            };
+
+            const toggleDetailForSpace = (category, item) => {
+                const space = formData.activeDetailSpace;
+                const currentList = formData.detailsBySpace[space][category];
+                setFormData(prev => ({
+                    ...prev,
+                    detailsBySpace: {
+                        ...prev.detailsBySpace,
+                        [space]: {
+                            ...prev.detailsBySpace[space],
+                            [category]: currentList.includes(item) ? currentList.filter(i => i !== item) : [...currentList, item]
+                        }
+                    }
+                }));
+            };
+
+            const addItem = (item) => {
+                if (selectedItems.find(si => si.id === item.id)) return;
+                const size = parseFloat(siteSize) || 0;
+                let qty = 1;
+                if (item.logic === 'PY_1X') qty = size;
+                if (item.logic === 'WALL_35') qty = Math.ceil(size * 3.5);
+                setSelectedItems(prev => [...prev, { ...item, qty }]);
+            };
+
+            const updateQty = (id, newQty) => {
+                setSelectedItems(prev => prev.map(item => item.id === id ? { ...item, qty: parseFloat(newQty) || 0 } : item));
+            };
+
+            const removeItem = (id) => setSelectedItems(prev => prev.filter(i => i.id !== id));
+            const handlePrint = () => window.print();
+            const resetForm = () => { if (window.confirm("초기화하시겠습니까?")) window.location.reload(); };
+
+            // --- 5. 컴포넌트 렌더러 ---
+            const renderBathSection = (type, title, bgColor, borderColor, textColor) => (
+                <div className={`${bgColor} p-6 rounded-[2rem] border-2 ${borderColor} relative shadow-sm`}>
+                    <h3 className={`font-black ${textColor} mb-6 text-sm flex items-center gap-2`}><Icon name="bath" size={18}/> {title}</h3>
+                    <div className="space-y-4">
+                        {[
+                            { label: '양변기', key: 'toilet', opts: ['표준형', '고급형'] },
+                            { label: '세면대', key: 'sink', opts: ['표준형', '고급형'] },
+                            { label: '세면수전', key: 'sinkFaucet', opts: ['표준형', '일반형'], hasEmbed: true, embedKey: 'isSinkFaucetEmbedded' }
+                        ].map(item => (
+                            <div key={item.key} className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[11px] font-black text-slate-500 uppercase">{item.label}</span>
+                                    {item.hasEmbed && (
+                                        <label className="flex items-center gap-1.5 cursor-pointer">
+                                            <input type="checkbox" checked={formData[type][item.embedKey]} onChange={(e) => handleBathChange(type, item.embedKey, e.target.checked)} className="w-3 h-3 rounded text-blue-600" />
+                                            <span className="text-[10px] font-bold text-slate-400">매립형</span>
+                                        </label>
+                                    )}
+                                </div>
+                                <div className="flex gap-1">
+                                    {item.opts.map(o => (
+                                        <button key={o} onClick={() => handleBathChange(type, item.key, o)} className={`flex-1 py-2 rounded-xl text-[10px] font-black border transition-all ${formData[type][item.key] === o ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100'}`}>{o}</button>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    {/* 상단바 */}
+                    <nav className="bg-[#0f172a] text-white p-4 sticky top-0 z-50 shadow-xl flex justify-between items-center no-print">
+                        <div className="flex items-center gap-4">
+                            <h1 className="text-xl font-black italic tracking-tighter">TOTO <span className="text-blue-500 not-italic uppercase">Pro</span></h1>
+                            <div className="flex gap-2 ml-6">
+                                <button onClick={() => setActiveMode('meeting')} className={`px-5 py-2 rounded-xl text-xs font-black transition-all ${activeMode === 'meeting' ? 'bg-blue-600 shadow-lg' : 'text-slate-500 hover:bg-slate-800'}`}>01. 미팅 시트</button>
+                                <button onClick={() => setActiveMode('quote')} className={`px-5 py-2 rounded-xl text-xs font-black transition-all ${activeMode === 'quote' ? 'bg-blue-600 shadow-lg' : 'text-slate-500 hover:bg-slate-800'}`}>02. 통합 견적</button>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="text-right">
+                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">Total Estimated</div>
+                                <div className="text-lg font-black text-blue-400 tracking-tighter">{totals.grand.toLocaleString()}원</div>
+                            </div>
+                            <button onClick={handlePrint} className="bg-blue-600 px-5 py-2.5 rounded-xl font-black text-xs shadow-lg hover:bg-blue-500 transition-all flex items-center gap-2"><Icon name="printer" size={16}/> 발행</button>
+                        </div>
+                    </nav>
+
+                    {/* 메인 컨텐츠 */}
+                    <main className="max-w-[1800px] mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 w-full flex-1">
+                        
+                        {/* 왼쪽: 입력 영역 */}
+                        <div className="lg:col-span-8 space-y-6">
+                            {/* 헤더 정보 카드 */}
+                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="md:col-span-2 space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">현장명 및 주소</label>
+                                    <input type="text" name="siteName" value={formData.siteName} onChange={handleInputChange} placeholder="현장 정보를 입력하세요" className="w-full bg-slate-50 border-none rounded-xl p-4 font-black text-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                                </div>
+                                <div className="bg-slate-50 rounded-2xl p-4 flex flex-col justify-center border border-slate-100 font-bold">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">공사 평수</label>
+                                    <div className="flex items-center gap-2">
+                                        <input type="number" value={siteSize} onChange={(e) => setSiteSize(e.target.value)} className="bg-transparent text-2xl font-black text-blue-600 outline-none w-20" placeholder="0" />
+                                        <span className="text-slate-400">평</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {activeMode === 'meeting' ? (
+                                <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden fade-in">
+                                    <div className="p-6 border-b flex justify-between items-center bg-slate-50/50">
+                                        <h2 className="font-black text-slate-800 text-sm flex items-center gap-2 uppercase"><Icon name="layout" size={18}/> Digital Consulting Sheet</h2>
+                                        <button onClick={resetForm} className="text-[10px] font-bold text-slate-400 hover:text-red-500 flex items-center gap-1"><Icon name="rotate-ccw" size={12}/> 초기화</button>
+                                    </div>
+                                    <div className="p-8 space-y-12 h-[700px] overflow-y-auto custom-scroll">
+                                        {/* 고객 기본 정보 */}
+                                        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                                                {[{ label: '고객명', name: 'customerName' }, { label: '연락처', name: 'contact' }, { label: '공사예정일', name: 'workDate', type: 'date' }, { label: '예산금액', name: 'budget' }].map(f => (
+                                                    <div key={f.name} className="space-y-1">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{f.label}</label>
+                                                        <input type={f.type || 'text'} name={f.name} value={formData[f.name]} onChange={handleInputChange} className="w-full bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs font-bold outline-none focus:border-blue-400" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="bg-slate-50 p-4 rounded-2xl space-y-4">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block border-b pb-2">방문 및 공사 목적</label>
+                                                <div className="flex flex-col gap-2">
+                                                    {['주거용', '매매계획', '임대용'].map(p => (
+                                                        <label key={p} className="flex items-center gap-3 cursor-pointer group">
+                                                            <input type="radio" name="residencePurpose" value={p} checked={formData.residencePurpose === p} onChange={handleInputChange} className="w-4 h-4 text-blue-600" />
+                                                            <span className={`text-xs font-black ${formData.residencePurpose === p ? 'text-blue-700' : 'text-slate-400'}`}>{p}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        {/* 마감재 및 공간 선택 */}
+                                        <section className="space-y-6">
+                                            <div className="flex items-center gap-3 border-b-2 border-slate-900 pb-2">
+                                                <h3 className="font-black text-slate-800 text-lg">마감재 사양 계획</h3>
+                                                <div className="ml-auto flex gap-1.5 no-print">
+                                                    {SPACES.slice(0, 5).map(s => (
+                                                        <button key={s} onClick={() => setFormData(p => ({...p, activeFinishSpace: s}))} className={`px-4 py-1.5 rounded-full text-[10px] font-black transition-all ${formData.activeFinishSpace === s ? 'bg-amber-500 text-white shadow-md' : 'bg-slate-100 text-slate-400'}`}>{s}</button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-6">
+                                                    <p className="text-xl font-black text-slate-800 uppercase tracking-tighter"><span className="text-amber-500">{formData.activeFinishSpace}</span> 마감 설정</p>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div><label className="text-[10px] font-black text-slate-400 block mb-2 uppercase">Floor 바닥</label>
+                                                            <select className="w-full p-3 bg-white border rounded-xl text-xs font-bold outline-none" value={formData.finishesBySpace[formData.activeFinishSpace].floor} onChange={(e) => handleFinishChange('floor', e.target.value)}>
+                                                                <option value="강마루">강마루</option><option value="원목마루">원목마루</option><option value="타일">타일</option><option value="장판">장판</option>
+                                                            </select>
+                                                        </div>
+                                                        <div><label className="text-[10px] font-black text-slate-400 block mb-2 uppercase">Wall 벽체</label>
+                                                            <select className="w-full p-3 bg-white border rounded-xl text-xs font-bold outline-none" value={formData.finishesBySpace[formData.activeFinishSpace].wall} onChange={(e) => handleFinishChange('wall', e.target.value)}>
+                                                                <option value="실크벽지">실크벽지</option><option value="도장">도장</option><option value="필름">필름</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-4 font-bold">
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block border-b pb-2">창호 브랜드 (Window)</label>
+                                                    <div className="grid grid-cols-1 gap-2">
+                                                        {['LX하우시스', '이건창호', 'KCC'].map(brand => (
+                                                            <button key={brand} onClick={() => setFormData(p => ({...p, windowBrand: brand}))} className={`p-4 rounded-2xl border-2 text-left transition-all flex justify-between items-center ${formData.windowBrand === brand ? 'border-blue-500 bg-blue-50' : 'bg-white border-slate-100 hover:border-blue-200'}`}>
+                                                                <span className="font-black text-sm">{brand}</span>
+                                                                {formData.windowBrand === brand && <Icon name="check-square" size={18} className="text-blue-600" />}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        {/* 욕실 사양 */}
+                                        <section className="space-y-6">
+                                            <div className="flex items-center gap-3 border-b-2 border-slate-900 pb-2"><h3 className="font-black text-slate-800 text-lg">욕실 사양 상세</h3></div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                {renderBathSection('publicBath', '공용 욕실 (Public)', 'bg-indigo-50/40', 'border-indigo-100', 'text-indigo-700')}
+                                                {renderBathSection('masterBath', '부부 욕실 (Master)', 'bg-purple-50/40', 'border-purple-100', 'text-purple-700')}
+                                            </div>
+                                        </section>
+
+                                        {/* 전기 및 목공 */}
+                                        <section className="space-y-6">
+                                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-slate-900 pb-2 gap-4">
+                                                <h3 className="font-black text-slate-800 text-lg">전기 및 목공 디테일</h3>
+                                                <div className="flex flex-wrap gap-1.5 no-print">
+                                                    {['전체', '거실', '안방', '주방'].map(s => (
+                                                        <button key={s} onClick={() => setFormData(p => ({...p, activeDetailSpace: s}))} className={`px-4 py-1.5 rounded-full text-[10px] font-black transition-all border ${formData.activeDetailSpace === s ? 'bg-rose-500 text-white border-rose-500' : 'bg-slate-100 text-slate-400'}`}>{s}</button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                                <div className="space-y-6">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">방문 및 문선 스타일</p>
+                                                    <select className="w-full p-3 bg-slate-50 border rounded-xl text-xs font-bold" value={formData.doorStyle} onChange={(e) => setFormData(p => ({...p, doorStyle: e.target.value}))}>
+                                                        <option value="미선택">미선택</option><option value="일반문">일반문</option><option value="9mm 문선">9mm 문선</option><option value="히든 도어">히든 도어</option><option value="무문선">무문선</option>
+                                                    </select>
+                                                    <div className="space-y-2">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">도어손잡이</p>
+                                                        <div className="flex gap-2">
+                                                            {['일반', '고급(도무스)'].map(h => (
+                                                                <button key={h} onClick={() => setFormData(p => ({...p, doorHandle: h}))} className={`flex-1 py-2 rounded-xl text-[10px] font-black border transition-all ${formData.doorHandle === h ? 'bg-rose-500 text-white' : 'bg-white text-slate-400'}`}>{h}</button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="lg:col-span-2 bg-slate-50 p-6 rounded-[2rem] grid grid-cols-2 gap-8">
+                                                    <div><h4 className="text-[11px] font-black text-slate-800 mb-4 flex items-center gap-2"><Icon name="lightbulb" size={16}/> 공간 조명</h4>
+                                                        <div className="space-y-2.5">
+                                                            {['메인등', '매립등', '간접 조명', '라인 조명'].map(l => (
+                                                                <label key={l} className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.detailsBySpace[formData.activeDetailSpace].lighting.includes(l)} onChange={() => toggleDetailForSpace('lighting', l)} className="w-4 h-4 rounded text-orange-500" /><span className="text-xs font-black text-slate-600">{l}</span></label>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <div><h4 className="text-[11px] font-black text-slate-800 mb-4 flex items-center gap-2"><Icon name="hammer" size={16}/> 공간 목공</h4>
+                                                        <div className="space-y-2.5">
+                                                            {['천장 평탄화', '무몰딩', '일반몰딩', '웨인스코팅'].map(c => (
+                                                                <label key={c} className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.detailsBySpace[formData.activeDetailSpace].carpentry.includes(c)} onChange={() => toggleDetailForSpace('carpentry', c)} className="w-4 h-4 rounded text-blue-500" /><span className="text-xs font-black text-slate-600">{c}</span></label>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* 데이터베이스 검색 모드 */
+                                <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden fade-in">
+                                    <div className="p-6 border-b flex justify-between items-center bg-slate-50/50">
+                                        <h2 className="font-black text-slate-800 text-sm flex items-center gap-2 uppercase"><Icon name="search" size={18}/> Item Master Database</h2>
+                                        <input type="text" placeholder="공종/품명 검색..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-64 px-5 py-2.5 bg-white border rounded-full text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                    <div className="h-[650px] overflow-y-auto custom-scroll">
+                                        <table className="w-full text-left">
+                                            <thead className="bg-slate-50 sticky top-0 z-10 border-b">
+                                                <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest"><th className="p-6 w-auto">품명 및 제품 스펙</th><th className="p-6 text-center w-24">단위</th><th className="p-6 text-right w-32">단가(원)</th><th className="p-6 text-center w-24">추가</th></tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50">
+                                                {MASTER_DB.filter(i => i.name.includes(searchTerm) || i.cat.includes(searchTerm)).map(item => (
+                                                    <tr key={item.id} className="hover:bg-blue-50 transition-colors">
+                                                        <td className="p-6 font-bold"><div className="text-[9px] text-blue-500 mb-1">{item.cat}</div><div className="text-sm text-slate-800">{item.name}</div><div className="text-[11px] text-slate-400 font-medium">{item.spec}</div></td>
+                                                        <td className="p-6 text-center text-xs font-black text-slate-400 uppercase">{item.unit}</td>
+                                                        <td className="p-6 text-right text-sm font-black text-slate-900">{item.price.toLocaleString()}</td>
+                                                        <td className="p-6 text-center"><button onClick={() => addItem(item)} className="w-9 h-9 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"><Icon name="plus" size={18}/></button></td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 오른쪽: 견적 내역 (고정) */}
+                        <div className="lg:col-span-4 space-y-6">
+                            <div className="bg-slate-900 rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden">
+                                <div className="absolute -top-4 -right-4 opacity-10 font-black text-8xl italic">AI</div>
+                                <h3 className="text-lg font-black mb-4 flex items-center gap-2"><Icon name="cpu" size={24} className="text-blue-500"/> Smart Advisor</h3>
+                                <p className="text-[11px] text-slate-400 leading-relaxed italic border-l-2 border-orange-500/50 pl-4 font-medium">
+                                    {selectedItems.length > 0 
+                                        ? `${siteSize || 0}평 현장의 직접 공사비는 평당 약 ${(totals.direct / (parseFloat(siteSize) || 1)).toLocaleString()}원입니다. 제경비 포함 시 총액은 ${totals.grand.toLocaleString()}원입니다.`
+                                        : "상담 내용을 기입하거나 DB에서 항목을 추가하여 견적 분석을 시작하십시오."}
+                                </p>
+                            </div>
+
+                            <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[calc(100vh-120px)] sticky top-24">
+                                <div className="p-6 bg-blue-600 text-white flex justify-between items-end">
+                                    <div><div className="text-[10px] font-bold opacity-60 uppercase tracking-widest mb-1">Quote Total</div><div className="text-3xl font-black italic tracking-tighter truncate">{totals.grand.toLocaleString()}원</div></div>
+                                    <div className="text-right shrink-0"><div className="text-[10px] font-bold opacity-60 uppercase mb-1">Items</div><div className="text-2xl font-black">{selectedItems.length}</div></div>
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/40 custom-scroll font-bold">
+                                    {selectedItems.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-20 text-slate-300 italic"><Icon name="file-text" size={48} className="mb-2 opacity-10"/><p className="text-xs">견적 내역이 비어있습니다.</p></div>
+                                    ) : (
+                                        selectedItems.map(item => (
+                                            <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group">
+                                                <div className="min-w-0 mr-3"><div className="text-[8px] font-black text-blue-500 uppercase">{item.cat}</div><div className="text-xs font-black text-slate-800 truncate">{item.name}</div><div className="text-[9px] font-bold text-slate-400">{item.price.toLocaleString()}원 / {item.unit}</div></div>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <input type="number" value={item.qty} onChange={(e) => updateQty(item.id, e.target.value)} className="w-10 bg-slate-100 border-0 rounded-lg text-xs font-black text-center p-1.5 focus:ring-1 focus:ring-blue-400" />
+                                                    <button onClick={() => removeItem(item.id)} className="text-slate-200 hover:text-red-500 p-1"><Icon name="x" size={14}/></button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                                <div className="p-6 border-t bg-white space-y-3 font-bold">
+                                    <div className="flex justify-between text-[11px] font-black text-slate-400 uppercase"><span>직접 공사비</span><span>{totals.direct.toLocaleString()}원</span></div>
+                                    <div className="flex justify-between text-[11px] font-black text-slate-400 uppercase border-b pb-3"><span>제경비 합계</span><span>{(totals.exp + totals.profit).toLocaleString()}원</span></div>
+                                    <button onClick={handlePrint} className="w-full bg-[#0f172a] text-white font-black py-4 rounded-2xl shadow-xl hover:bg-slate-800 transition-all transform active:scale-95 flex items-center justify-center gap-2"><Icon name="printer" size={18}/> 견적서 발행하기</button>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                    <footer className="py-8 text-center text-slate-300 text-[10px] font-black tracking-[0.4em] uppercase">© {new Date().getFullYear()} TOTODESIGN INTERIOR STUDIO - INTEGRATED APP</footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
