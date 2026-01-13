@@ -239,8 +239,15 @@
             const ceilingIsPaper = activeFinishes?.ceiling === '벽지';
 
             const handleInputChange = (e) => {
-                const { name, value, type, checked } = e.target;
-                setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+                try {
+                    const { name, value, type, checked } = e.target;
+                    setFormData(prev => {
+                        const newValue = type === 'checkbox' ? checked : value;
+                        return { ...prev, [name]: newValue };
+                    });
+                } catch (error) {
+                    console.error('Input change error:', error);
+                }
             };
 
             const toggleArrayItem = (listName, item) => {
@@ -403,14 +410,26 @@
                                         
                                         <div className="flex flex-wrap items-center gap-4">
                                             {item.key === 'zendai' ? (
-                                                <select 
-                                                    value={formData[type][item.key]} 
-                                                    onChange={(e) => handleBathChange(type, item.key, e.target.value)}
-                                                    className="px-4 py-1.5 bg-slate-100 rounded-xl text-[10px] font-black text-slate-900 outline-none border-0 focus:ring-2 focus:ring-indigo-300"
-                                                >
-                                                    <option value="표준형">표준형</option>
-                                                    <option value="고급형">고급형</option>
-                                                </select>
+                                                <div className="flex gap-1.5 p-1 bg-slate-100 rounded-xl font-bold">
+                                                    {['표준형', '고급형'].map(opt => (
+                                                        <label key={opt} className="flex items-center gap-2 cursor-pointer group px-3 py-1.5 rounded-lg transition-all">
+                                                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
+                                                                formData[type][item.key] === opt 
+                                                                    ? 'bg-indigo-500 border-indigo-500' 
+                                                                    : 'bg-white border-slate-300 group-hover:border-indigo-300'
+                                                            }`}>
+                                                                {formData[type][item.key] === opt && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                                                            </div>
+                                                            <input 
+                                                                type="checkbox" 
+                                                                className="hidden" 
+                                                                checked={formData[type][item.key] === opt} 
+                                                                onChange={() => handleBathChange(type, item.key, opt)} 
+                                                            />
+                                                            <span className={`text-[10px] font-black ${formData[type][item.key] === opt ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`}>{opt}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
                                             ) : (
                                                 <div className="flex gap-1.5 p-1 bg-slate-100 rounded-xl font-bold">
                                                     {['표준형', '고급형'].map(opt => (
@@ -571,30 +590,54 @@
                                     <div className="space-y-2">
                                         <label className="flex items-center gap-2 cursor-pointer group p-2 rounded-lg hover:bg-slate-50 transition-colors">
                                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                                                formData.hasElevator 
+                                                (formData.hasElevator === true || formData.hasElevator === 'true') 
                                                     ? 'bg-blue-500 border-blue-500' 
                                                     : 'bg-white border-slate-300 group-hover:border-blue-300'
                                             }`}>
-                                                {formData.hasElevator && <Check size={12} className="text-white" />}
+                                                {(formData.hasElevator === true || formData.hasElevator === 'true') && <Check size={12} className="text-white" />}
                                             </div>
-                                            <input type="checkbox" name="hasElevator" checked={formData.hasElevator} onChange={handleInputChange} className="hidden" />
+                                            <input 
+                                                type="checkbox" 
+                                                name="hasElevator" 
+                                                checked={formData.hasElevator === true || formData.hasElevator === 'true'} 
+                                                onChange={(e) => {
+                                                    try {
+                                                        setFormData(prev => ({ ...prev, hasElevator: e.target.checked }));
+                                                    } catch (error) {
+                                                        console.error('Elevator checkbox error:', error);
+                                                    }
+                                                }} 
+                                                className="hidden" 
+                                            />
                                             <div className="flex items-center gap-2">
-                                                <ArrowUpSquare size={14} className={formData.hasElevator ? "text-blue-500" : "text-slate-300"} />
-                                                <span className={`text-xs font-black ${formData.hasElevator ? 'text-blue-600' : 'text-slate-400'}`}>엘리베이터</span>
+                                                <ArrowUpSquare size={14} className={(formData.hasElevator === true || formData.hasElevator === 'true') ? "text-blue-500" : "text-slate-300"} />
+                                                <span className={`text-xs font-black ${(formData.hasElevator === true || formData.hasElevator === 'true') ? 'text-blue-600' : 'text-slate-400'}`}>엘리베이터</span>
                                             </div>
                                         </label>
                                         <label className="flex items-center gap-2 cursor-pointer group p-2 rounded-lg hover:bg-slate-50 transition-colors">
                                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                                                formData.isOuterWall 
+                                                (formData.isOuterWall === true || formData.isOuterWall === 'true')
                                                     ? 'bg-red-500 border-red-500' 
                                                     : 'bg-white border-slate-300 group-hover:border-red-300'
                                             }`}>
-                                                {formData.isOuterWall && <Check size={12} className="text-white" />}
+                                                {(formData.isOuterWall === true || formData.isOuterWall === 'true') && <Check size={12} className="text-white" />}
                                             </div>
-                                            <input type="checkbox" name="isOuterWall" checked={formData.isOuterWall} onChange={handleInputChange} className="hidden" />
+                                            <input 
+                                                type="checkbox" 
+                                                name="isOuterWall" 
+                                                checked={formData.isOuterWall === true || formData.isOuterWall === 'true'} 
+                                                onChange={(e) => {
+                                                    try {
+                                                        setFormData(prev => ({ ...prev, isOuterWall: e.target.checked }));
+                                                    } catch (error) {
+                                                        console.error('OuterWall checkbox error:', error);
+                                                    }
+                                                }} 
+                                                className="hidden" 
+                                            />
                                             <div className="flex items-center gap-2">
-                                                <ThermometerSnowflake size={14} className={formData.isOuterWall ? "text-red-500" : "text-slate-300"} />
-                                                <span className={`text-xs font-black ${formData.isOuterWall ? 'text-red-600' : 'text-slate-400'}`}>외벽 라인</span>
+                                                <ThermometerSnowflake size={14} className={(formData.isOuterWall === true || formData.isOuterWall === 'true') ? "text-red-500" : "text-slate-300"} />
+                                                <span className={`text-xs font-black ${(formData.isOuterWall === true || formData.isOuterWall === 'true') ? 'text-red-600' : 'text-slate-400'}`}>외벽 라인</span>
                                             </div>
                                         </label>
                                     </div>
