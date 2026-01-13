@@ -495,41 +495,36 @@
                                 </div>
                             </div>
 
-                            {(() => {
-                                const activeFinishes = formData.finishesBySpace[formData.activeFinishSpace];
-                                const wallIsPaper = activeFinishes.wall === '벽지';
-                                const ceilingIsPaper = activeFinishes.ceiling === '벽지';
-                                return (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 font-bold">
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 font-sans font-bold">Floor 바닥재</label>
-                                            <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={activeFinishes.floor} onChange={(e) => handleFinishChange('floor', e.target.value)}>
+                                            <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={formData.finishesBySpace[formData.activeFinishSpace].floor} onChange={(e) => handleFinishChange('floor', e.target.value)}>
                                                 {['미선택', '장판', '강마루', '원목마루', '타일'].map(item => (<option key={item} value={item}>{item}</option>))}
                                             </select>
                                         </div>
                                         <div>
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 font-sans font-bold">세부 등급</label>
-                                            <select className="w-full p-3 bg-amber-50/50 border border-amber-100 rounded-xl text-xs font-black text-amber-700 outline-none font-bold font-sans font-bold" value={activeFinishes.floorOption} onChange={(e) => handleFinishChange('floorOption', e.target.value)}>
-                                                {activeFinishes.floor === '장판' && (<><option value="보급">보급형</option><option value="표준">표준형</option><option value="고급">고급형</option></>)}
-                                                {activeFinishes.floor === '강마루' && (<><option value="우드타입">Wood Type</option><option value="석재타입">Stone Type</option></>)}
-                                                {activeFinishes.floor === '원목마루' && (<><option value="표준">Standard</option><option value="고급">Premium</option></>)}
-                                                {activeFinishes.floor === '미선택' && (<option value="미선택">미선택</option>)}
-                                                {activeFinishes.floor !== '미선택' && !['장판', '강마루', '원목마루'].includes(activeFinishes.floor) && (<option value="상담결정">상담 후 결정</option>)}
+                                            <select className="w-full p-3 bg-amber-50/50 border border-amber-100 rounded-xl text-xs font-black text-amber-700 outline-none font-bold font-sans font-bold" value={formData.finishesBySpace[formData.activeFinishSpace].floorOption} onChange={(e) => handleFinishChange('floorOption', e.target.value)}>
+                                                {formData.finishesBySpace[formData.activeFinishSpace].floor === '장판' && (<><option value="보급">보급형</option><option value="표준">표준형</option><option value="고급">고급형</option></>)}
+                                                {formData.finishesBySpace[formData.activeFinishSpace].floor === '강마루' && (<><option value="우드타입">Wood Type</option><option value="석재타입">Stone Type</option></>)}
+                                                {formData.finishesBySpace[formData.activeFinishSpace].floor === '원목마루' && (<><option value="표준">Standard</option><option value="고급">Premium</option></>)}
+                                                {formData.finishesBySpace[formData.activeFinishSpace].floor === '미선택' && (<option value="미선택">미선택</option>)}
+                                                {formData.finishesBySpace[formData.activeFinishSpace].floor !== '미선택' && !['장판', '강마루', '원목마루'].includes(formData.finishesBySpace[formData.activeFinishSpace].floor) && (<option value="상담결정">상담 후 결정</option>)}
                                             </select>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 font-sans font-bold font-sans font-bold">Wall 벽체 마감</label>
-                                            <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={activeFinishes.wall} onChange={(e) => handleFinishChange('wall', e.target.value)}>
+                                            <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={formData.finishesBySpace[formData.activeFinishSpace].wall} onChange={(e) => handleFinishChange('wall', e.target.value)}>
                                                 {['미선택', '벽지', '도장', '필름', '디자인월'].map(i => <option key={i} value={i}>{i}</option>)}
                                             </select>
                                         </div>
                                         <div>
                                             <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 font-sans font-bold font-sans font-bold">Ceiling 천장 마감</label>
-                                            <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={activeFinishes.ceiling} onChange={(e) => handleFinishChange('ceiling', e.target.value)}>
+                                            <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={formData.finishesBySpace[formData.activeFinishSpace].ceiling} onChange={(e) => handleFinishChange('ceiling', e.target.value)}>
                                                 {['미선택', '벽지', '도장', '필름'].map(i => <option key={i} value={i}>{i}</option>)}
                                             </select>
                                         </div>
@@ -537,26 +532,26 @@
                                 </div>
 
                                 <div className="bg-slate-50/50 p-6 rounded-[2rem] border-2 border-slate-50 font-bold">
-                                    {(wallIsPaper || ceilingIsPaper) ? (
+                                    {(formData.finishesBySpace[formData.activeFinishSpace].wall === '벽지' || formData.finishesBySpace[formData.activeFinishSpace].ceiling === '벽지') ? (
                                         <div className="space-y-6">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 font-bold font-sans">Wallpaper Detail 도배지 종류</p>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                {wallIsPaper && (
+                                                {formData.finishesBySpace[formData.activeFinishSpace].wall === '벽지' && (
                                                     <div className="space-y-2">
                                                         <p className="text-[11px] font-black text-amber-700">벽체 도배지</p>
                                                         <div className="grid grid-cols-1 gap-2">
                                                             {['미선택', '일반실크(베스트)', '고급실크(디아망등)', '프리미엄(포티스)', '광폭합지'].map(paper => (
-                                                                <button key={paper} onClick={() => handleFinishChange('wallpaperTypeWall', paper)} className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${activeFinishes.wallpaperTypeWall === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}>{paper}</button>
+                                                                <button key={paper} onClick={() => handleFinishChange('wallpaperTypeWall', paper)} className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${formData.finishesBySpace[formData.activeFinishSpace].wallpaperTypeWall === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}>{paper}</button>
                                                             ))}
                                                         </div>
                                                     </div>
                                                 )}
-                                                {ceilingIsPaper && (
+                                                {formData.finishesBySpace[formData.activeFinishSpace].ceiling === '벽지' && (
                                                     <div className="space-y-2">
                                                         <p className="text-[11px] font-black text-amber-700">천장 도배지</p>
                                                         <div className="grid grid-cols-1 gap-2">
                                                             {['미선택', '일반실크(베스트)', '고급실크(디아망등)', '프리미엄(포티스)', '광폭합지'].map(paper => (
-                                                                <button key={paper} onClick={() => handleFinishChange('wallpaperTypeCeiling', paper)} className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${activeFinishes.wallpaperTypeCeiling === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}>{paper}</button>
+                                                                <button key={paper} onClick={() => handleFinishChange('wallpaperTypeCeiling', paper)} className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${formData.finishesBySpace[formData.activeFinishSpace].wallpaperTypeCeiling === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}>{paper}</button>
                                                             ))}
                                                         </div>
                                                     </div>
@@ -568,8 +563,6 @@
                                     )}
                                 </div>
                             </div>
-                            );
-                            })()}
                         </section>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-bold">
