@@ -277,18 +277,26 @@
 
             const toggleDetailForSpace = (category, item) => {
                 const space = formData.activeDetailSpace;
-                setFormData(prev => ({
-                    ...prev,
-                    detailsBySpace: {
-                        ...prev.detailsBySpace,
-                        [space]: {
-                            ...prev.detailsBySpace[space],
-                            [category]: prev.detailsBySpace[space][category].includes(item)
-                                ? prev.detailsBySpace[space][category].filter(i => i !== item)
-                                : [...prev.detailsBySpace[space][category], item]
+                setFormData(prev => {
+                    const currentSpace = prev.detailsBySpace[space] || { lighting: [], electrical: [], carpentry: [], lightingLocations: {} };
+                    const currentArray = currentSpace[category] || [];
+                    const isArray = Array.isArray(currentArray);
+                    
+                    return {
+                        ...prev,
+                        detailsBySpace: {
+                            ...prev.detailsBySpace,
+                            [space]: {
+                                ...currentSpace,
+                                [category]: isArray && currentArray.includes(item)
+                                    ? currentArray.filter(i => i !== item)
+                                    : isArray
+                                    ? [...currentArray, item]
+                                    : [item]
+                            }
                         }
-                    }
-                }));
+                    };
+                });
             };
 
             const handleDetailLocationChange = (item, value) => {
@@ -819,75 +827,48 @@
                                 };
 
                                 const handleDoorDetailChange = (key, value) => {
-                                    setFormData(prev => ({
-                                        ...prev,
-                                        doorDetailsBySpace: {
-                                            ...prev.doorDetailsBySpace,
-                                            [prev.activeDetailSpace]: {
-                                                ...prev.doorDetailsBySpace[prev.activeDetailSpace],
-                                                [key]: value
+                                    setFormData(prev => {
+                                        const currentSpace = prev.doorDetailsBySpace[prev.activeDetailSpace] || {
+                                            doorStyle: '미선택',
+                                            doorHandle: '일반',
+                                            moldingType: '미선택',
+                                            skirtingType: '미선택',
+                                            entranceDoor: '미선택'
+                                        };
+                                        
+                                        return {
+                                            ...prev,
+                                            doorDetailsBySpace: {
+                                                ...prev.doorDetailsBySpace,
+                                                [prev.activeDetailSpace]: {
+                                                    ...currentSpace,
+                                                    [key]: value
+                                                }
                                             }
-                                        }
-                                    }));
+                                        };
+                                    });
                                 };
 
                                 return (
-                            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-10 font-bold">
-                                <div className="lg:col-span-1 space-y-8">
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-[0.2em] border-b pb-2 font-sans font-bold">방문 및 문선</p>
-                                        <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-xs font-black focus:border-rose-400 font-sans font-bold font-sans" value={currentDoorDetails.doorStyle} onChange={(e) => handleDoorDetailChange('doorStyle', e.target.value)}>
-                                            <option value="미선택">미선택</option><option value="일반문">일반문</option><option value="9mm 문선">9mm 문선</option><option value="히든 도어">히든 도어</option><option value="무문선">무문선</option>
-                                        </select>
-                                        <div className="mt-6">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 font-sans font-bold">도어손잡이</p>
-                                            <div className="flex gap-2">
-                                                {['일반', '고급(도무스)'].map(h => (<button key={h} onClick={() => handleDoorDetailChange('doorHandle', h)} className={`flex-1 py-2.5 text-[9px] font-black border rounded-xl transition-all ${currentDoorDetails.doorHandle === h ? 'bg-rose-500 text-white border-rose-500 shadow-sm font-sans font-bold' : 'bg-white text-slate-300 border-slate-100 font-sans'}`}>{h}</button>))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-[0.2em] border-b pb-2 font-sans font-bold">목공 마감</p>
-                                        <div className="space-y-3 font-bold">
-                                            <div className="flex flex-col gap-1.5 font-bold">
-                                                <label className="text-[9px] font-black text-slate-400 uppercase">몰딩 선택</label>
-                                                <select className="w-full p-2.5 bg-slate-50 rounded-lg text-[11px] font-bold outline-none font-sans" value={currentDoorDetails.moldingType} onChange={(e) => handleDoorDetailChange('moldingType', e.target.value)}>
-                                                    <option value="미선택">미선택</option>
-                                                    <option value="무몰딩">무몰딩</option>
-                                                    <option value="마이너스몰딩">마이너스몰딩</option>
-                                                    <option value="일반몰딩">일반몰딩</option>
-                                                </select>
-                                            </div>
-                                            <div className="flex flex-col gap-1.5 font-bold">
-                                                <label className="text-[9px] font-black text-slate-400 uppercase">걸레받이 선택</label>
-                                                <select className="w-full p-2.5 bg-slate-50 rounded-lg text-[11px] font-bold outline-none font-sans" value={currentDoorDetails.skirtingType} onChange={(e) => handleDoorDetailChange('skirtingType', e.target.value)}>
-                                                    <option value="미선택">미선택</option>
-                                                    <option value="무걸레받이">무걸레받이</option>
-                                                    <option value="마이너스 걸레받이">마이너스 걸레받이</option>
-                                                    <option value="일반 걸레받이">일반 걸레받이</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div className="mt-6">
-                                            <p className="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-[0.2em] border-b pb-2 font-sans font-bold">현관 중문</p>
-                                            <select className="w-full p-3 bg-white border-2 border-rose-100 rounded-xl outline-none text-xs font-black text-rose-700 font-sans font-bold" value={currentDoorDetails.entranceDoor} onChange={(e) => handleDoorDetailChange('entranceDoor', e.target.value)}>
-                                                <option value="미선택">미선택</option><option value="초슬림 3연동">초슬림 3연동</option><option value="원슬라이딩">원슬라이딩</option><option value="비대칭 여닫이">비대칭 여닫이</option><option value="스윙도어">스윙도어</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="lg:col-span-3 bg-slate-50/50 p-6 md:p-8 rounded-[2.5rem] border-2 border-slate-100 relative shadow-sm">
+                                    <div className="bg-slate-50/50 p-6 md:p-8 rounded-[2.5rem] border-2 border-slate-100 relative shadow-sm mb-10 font-bold">
                                     <div className="absolute top-6 right-8 opacity-10 flex items-center gap-2 text-rose-300 font-bold"><Layout size={40}/><span className="text-2xl font-black uppercase font-sans">{formData.activeDetailSpace}</span></div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 relative">
                                         <div>
                                             <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Lightbulb size={16} className="text-orange-400"/> 공간 조명</h4>
                                             <div className="space-y-3.5 font-bold">
                                                 {['메인등', '매립등(다운)', '간접 조명', '라인 조명', '실링팬'].map(light => (
-                                                    <div key={light} className="flex flex-col gap-2 font-bold font-sans">
-                                                        <label className="flex items-center gap-3 cursor-pointer group font-sans font-bold"><div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${formData.detailsBySpace[formData.activeDetailSpace].lighting.includes(light) ? 'bg-orange-400 border-orange-400 shadow-md' : 'bg-white border-slate-200'}`}>{formData.detailsBySpace[formData.activeDetailSpace].lighting.includes(light) && <Zap size={10} className="text-white fill-current font-sans font-bold"/>}</div><input type="checkbox" className="hidden" checked={formData.detailsBySpace[formData.activeDetailSpace].lighting.includes(light)} onChange={() => toggleDetailForSpace('lighting', light)}/><span className={`text-[12px] font-black ${formData.detailsBySpace[formData.activeDetailSpace].lighting.includes(light) ? 'text-slate-800' : 'text-slate-400 font-sans'}`}>{light}</span></label>
-                                                        {formData.detailsBySpace[formData.activeDetailSpace].lighting.includes(light) && (
-                                                            <div className="pl-8"><input type="text" placeholder="위치 상세" className="w-full p-2 text-[10px] bg-white border-b-2 border-orange-100 focus:border-orange-300 outline-none font-bold rounded-t-lg transition-all font-sans" value={formData.detailsBySpace[formData.activeDetailSpace].lightingLocations[light] || ''} onChange={(e) => handleDetailLocationChange(light, e.target.value)} /></div>
+                                                    <div key={light} className="flex flex-col gap-2 font-bold">
+                                                        <label className="flex items-center gap-3 cursor-pointer group font-bold">
+                                                            <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${(formData.detailsBySpace[formData.activeDetailSpace]?.lighting || []).includes(light) ? 'bg-orange-400 border-orange-400 shadow-md' : 'bg-white border-slate-200'}`}>
+                                                                {(formData.detailsBySpace[formData.activeDetailSpace]?.lighting || []).includes(light) && <Zap size={10} className="text-white fill-current"/>}
+                                                            </div>
+                                                            <input type="checkbox" className="hidden" checked={(formData.detailsBySpace[formData.activeDetailSpace]?.lighting || []).includes(light)} onChange={() => toggleDetailForSpace('lighting', light)}/>
+                                                            <span className={`text-[12px] font-black ${(formData.detailsBySpace[formData.activeDetailSpace]?.lighting || []).includes(light) ? 'text-slate-800' : 'text-slate-400'}`}>{light}</span>
+                                                        </label>
+                                                        {(formData.detailsBySpace[formData.activeDetailSpace]?.lighting || []).includes(light) && (
+                                                            <div className="pl-8">
+                                                                <input type="text" placeholder="위치 상세" className="w-full p-2 text-[10px] bg-white border-b-2 border-orange-100 focus:border-orange-300 outline-none font-bold rounded-t-lg transition-all" value={(formData.detailsBySpace[formData.activeDetailSpace]?.lightingLocations || {})[light] || ''} onChange={(e) => handleDetailLocationChange(light, e.target.value)} />
+                                                            </div>
                                                         )}
                                                     </div>
                                                 ))}
@@ -895,20 +876,86 @@
                                         </div>
 
                                         <div>
-                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold font-sans font-bold"><Cpu size={16} className="text-teal-500"/> 공간 전기 & 제어</h4>
-                                            <div className="space-y-3 font-sans font-bold font-sans font-bold font-bold">
+                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Cpu size={16} className="text-teal-500"/> 공간 전기 & 제어</h4>
+                                            <div className="space-y-3 font-bold">
                                                 {['분전함 교체', '단독 배선', '일괄소등 스위치', 'IoT 시스템 적용'].map(item => (
-                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${formData.detailsBySpace[formData.activeDetailSpace].electrical?.includes(item) ? 'bg-teal-500 border-teal-500 text-white shadow-lg font-bold' : 'bg-white border-slate-100 text-slate-400 hover:border-teal-100 font-sans'}`}><input type="checkbox" className="hidden" checked={formData.detailsBySpace[formData.activeDetailSpace].electrical?.includes(item)} onChange={() => toggleDetailForSpace('electrical', item)} /><span className="text-[11px] font-black font-sans font-bold">{item}</span></label>
+                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${(formData.detailsBySpace[formData.activeDetailSpace]?.electrical || []).includes(item) ? 'bg-teal-500 border-teal-500 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-teal-100'}`}>
+                                                        <input type="checkbox" className="hidden" checked={(formData.detailsBySpace[formData.activeDetailSpace]?.electrical || []).includes(item)} onChange={() => toggleDetailForSpace('electrical', item)} />
+                                                        <span className="text-[11px] font-black">{item}</span>
+                                                    </label>
                                                 ))}
                                             </div>
                                         </div>
 
                                         <div>
-                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold font-sans font-bold font-sans font-bold font-sans"><Hammer size={16} className="text-blue-400 font-sans font-bold font-sans font-bold font-bold"/><span className="font-sans font-bold font-sans font-bold font-sans font-bold">공간 목공 & 특수</span></h4>
-                                            <div className="grid grid-cols-1 gap-2.5 font-sans font-bold font-sans font-bold font-sans font-bold font-bold">
+                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Hammer size={16} className="text-blue-400"/> 공간 목공 & 특수</h4>
+                                            <div className="grid grid-cols-1 gap-2.5 font-bold">
                                                 {['천장 평탄화', '가벽설치', '단열공사', '문틀보강', '커튼박스', '웨인스코팅', '아치형 개구부'].map(item => (
-                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${formData.detailsBySpace[formData.activeDetailSpace].carpentry.includes(item) ? 'bg-blue-500 border-blue-500 text-white shadow-lg font-sans font-bold' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-100 font-sans font-bold'}`}><input type="checkbox" className="hidden" checked={formData.detailsBySpace[formData.activeDetailSpace].carpentry.includes(item)} onChange={() => toggleDetailForSpace('carpentry', item)} /><span className="text-[11px] font-black font-sans font-bold">{item}</span></label>
+                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${(formData.detailsBySpace[formData.activeDetailSpace]?.carpentry || []).includes(item) ? 'bg-blue-500 border-blue-500 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-100'}`}><input type="checkbox" className="hidden" checked={(formData.detailsBySpace[formData.activeDetailSpace]?.carpentry || []).includes(item)} onChange={() => toggleDetailForSpace('carpentry', item)} /><span className="text-[11px] font-black">{item}</span></label>
                                                 ))}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Box size={16} className="text-purple-400"/> 방문 및 문선</h4>
+                                            <div className="space-y-4 font-bold">
+                                                <div>
+                                                    <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">문선 선택</label>
+                                                    <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-purple-400 transition-colors" value={currentDoorDetails.doorStyle} onChange={(e) => handleDoorDetailChange('doorStyle', e.target.value)}>
+                                                        <option value="미선택">미선택</option>
+                                                        <option value="일반문">일반문</option>
+                                                        <option value="9mm 문선">9mm 문선</option>
+                                                        <option value="히든 도어">히든 도어</option>
+                                                        <option value="무문선">무문선</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">도어손잡이</label>
+                                                    <div className="flex gap-2">
+                                                        {['일반', '고급(도무스)'].map(h => (
+                                                            <button key={h} onClick={() => handleDoorDetailChange('doorHandle', h)} className={`flex-1 py-2.5 text-[10px] font-black border-2 rounded-xl transition-all ${currentDoorDetails.doorHandle === h ? 'bg-purple-500 text-white border-purple-500 shadow-sm' : 'bg-white text-slate-400 border-slate-100 hover:border-purple-200'}`}>
+                                                                {h}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Scissors size={16} className="text-amber-400"/> 목공 마감</h4>
+                                            <div className="space-y-4 font-bold">
+                                                <div>
+                                                    <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">몰딩 선택</label>
+                                                    <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-amber-400 transition-colors" value={currentDoorDetails.moldingType} onChange={(e) => handleDoorDetailChange('moldingType', e.target.value)}>
+                                                        <option value="미선택">미선택</option>
+                                                        <option value="무몰딩">무몰딩</option>
+                                                        <option value="마이너스몰딩">마이너스몰딩</option>
+                                                        <option value="일반몰딩">일반몰딩</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">걸레받이 선택</label>
+                                                    <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-amber-400 transition-colors" value={currentDoorDetails.skirtingType} onChange={(e) => handleDoorDetailChange('skirtingType', e.target.value)}>
+                                                        <option value="미선택">미선택</option>
+                                                        <option value="무걸레받이">무걸레받이</option>
+                                                        <option value="마이너스 걸레받이">마이너스 걸레받이</option>
+                                                        <option value="일반 걸레받이">일반 걸레받이</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Box size={16} className="text-rose-400"/> 현관 중문</h4>
+                                            <div className="font-bold">
+                                                <select className="w-full p-3 bg-white border-2 border-rose-100 rounded-xl outline-none text-xs font-black text-rose-700 focus:border-rose-400 transition-colors" value={currentDoorDetails.entranceDoor} onChange={(e) => handleDoorDetailChange('entranceDoor', e.target.value)}>
+                                                    <option value="미선택">미선택</option>
+                                                    <option value="초슬림 3연동">초슬림 3연동</option>
+                                                    <option value="원슬라이딩">원슬라이딩</option>
+                                                    <option value="비대칭 여닫이">비대칭 여닫이</option>
+                                                    <option value="스윙도어">스윙도어</option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -926,9 +973,8 @@
                                             </div>
                                         ))}
                                     </div>
-                                </div>
-                            </div>
-                            );
+                                    </div>
+                                );
                             })()}
                         </section>
 
