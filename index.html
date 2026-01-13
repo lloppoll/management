@@ -619,6 +619,52 @@
                             </div>
                         </section>
 
+                        {/* 창호 및 확장 공사 */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans font-bold section-break">
+                            <div className="bg-white p-6 rounded-3xl shadow-sm border-t-4 border-blue-500">
+                                <h3 className="font-black text-blue-600 mb-5 flex items-center gap-2 text-lg"><Wind size={20} /> 창호 브랜드</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    {[{ name: 'LX하우시스', sub: '20%▲' }, { name: '이건창호', sub: '10%▲' }, { name: 'KCC', sub: '표준' }].map(brand => (
+                                        <button
+                                            key={brand.name}
+                                            onClick={() => setFormData(p => ({ ...p, windowBrand: brand.name }))}
+                                            className={`w-full p-4 rounded-2xl text-left border-2 transition-all flex flex-col items-center justify-center ${
+                                                formData.windowBrand === brand.name
+                                                    ? 'border-blue-500 bg-blue-50'
+                                                    : 'bg-slate-50 border-transparent hover:border-blue-200'
+                                            }`}
+                                        >
+                                            <span className="font-black text-sm">{brand.name}</span>
+                                            {brand.sub && <span className="text-[10px] font-bold text-slate-400 mt-1">{brand.sub}</span>}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="bg-white p-6 rounded-3xl shadow-sm border-t-4 border-orange-500">
+                                <h3 className="font-black text-orange-600 mb-5 flex items-center gap-2 text-lg"><Maximize size={20} /> 확장 공사</h3>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['거실', '주방', '안방', '침실1', '침실2', '발코니'].map(room => (
+                                        <label
+                                            key={room}
+                                            className={`flex items-center justify-center p-3 border-2 rounded-2xl cursor-pointer transition-all ${
+                                                formData.extensions.includes(room)
+                                                    ? 'bg-orange-50 border-orange-200 text-orange-700 shadow-sm'
+                                                    : 'bg-slate-50 border-transparent text-slate-400'
+                                            }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.extensions.includes(room)}
+                                                onChange={() => toggleArrayItem('extensions', room)}
+                                                className="hidden"
+                                            />
+                                            <span className="text-xs font-black">{room}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-l-8 border-teal-500 font-bold section-break">
                             <h3 className="font-black text-teal-600 mb-6 flex items-center gap-2 text-xl tracking-tight"><Utensils size={24} /> 주방 사양</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
