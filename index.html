@@ -42,7 +42,7 @@
             return <i data-lucide={name} className={className} style={{ width: size, height: size, display: 'inline-block' }}></i>;
         };
 
-        // 개별 아이콘 컴포넌트 정의 (코드 호환성 유지)
+        // 개별 아이콘 컴포넌트 정의
         const User = (p) => <Icon name="user" {...p} />;
         const Phone = (p) => <Icon name="phone" {...p} />;
         const MapPin = (p) => <Icon name="map-pin" {...p} />;
@@ -74,6 +74,8 @@
         const CheckSquare = (p) => <Icon name="check-square" {...p} />;
         const Cpu = (p) => <Icon name="cpu" {...p} />;
 
+        const SPACES = ['전체', '거실', '안방', '주방', '현관', '발코니', '드레스룸', '욕실', '기타'];
+
         const App = () => {
             const [formData, setFormData] = useState({
                 customerName: '',
@@ -100,16 +102,13 @@
                 kitchenCountertop: '인조대리석',
                 kitchenExtra: '',
                 activeFinishSpace: '전체',
-                finishesBySpace: {
-                    '전체': { floor: '강마루', floorOption: '표준', wall: '실크벽지', wallpaperType: '일반실크(베스트)', ceiling: '실크벽지' },
-                    '거실': { floor: '강마루', floorOption: '표준', wall: '실크벽지', wallpaperType: '일반실크(베스트)', ceiling: '실크벽지' },
-                    '안방': { floor: '강마루', floorOption: '표준', wall: '실크벽지', wallpaperType: '일반실크(베스트)', ceiling: '실크벽지' },
-                    '작은방 1': { floor: '강마루', floorOption: '표준', wall: '실크벽지', wallpaperType: '일반실크(베스트)', ceiling: '실크벽지' },
-                    '작은방 2': { floor: '강마루', floorOption: '표준', wall: '실크벽지', wallpaperType: '일반실크(베스트)', ceiling: '실크벽지' },
-                    '주방': { floor: '강마루', floorOption: '표준', wall: '실크벽지', wallpaperType: '일반실크(베스트)', ceiling: '실크벽지' },
-                    '현관': { floor: '타일', floorOption: '표준', wall: '필름', wallpaperType: '일반실크(베스트)', ceiling: '실크벽지' },
-                    '발코니': { floor: '타일', floorOption: '표준', wall: '도장', wallpaperType: '일반실크(베스트)', ceiling: '도장' }
-                },
+                // 마감재 초기화: '전체'만 기본값, 나머지는 '미선택'
+                finishesBySpace: SPACES.reduce((acc, s) => ({
+                    ...acc, 
+                    [s]: s === '전체' 
+                        ? { floor: '강마루', floorOption: '표준', wall: '실크벽지', wallpaperType: '일반실크(베스트)', ceiling: '실크벽지' }
+                        : { floor: '미선택', floorOption: '미선택', wall: '미선택', wallpaperType: '미선택', ceiling: '미선택' }
+                }), {}),
                 publicBath: {
                     tub: '미선택', partition: '미선택', trench: '일반육가', cabinet: '미선택',
                     tileType: '포세린', tileSize: '600*600', ceiling: '미선택', ventFan: '미선택',
@@ -125,21 +124,11 @@
                     zendai: '표준형'
                 },
                 activeSpace: '전체',
-                furnitureBySpace: {
-                    '전체': [], '안방': [], '작은방 1': [], '작은방 2': [], '거실': [], '주방': [], '현관': [], '드레스룸': [], '기타': []
-                },
+                furnitureBySpace: SPACES.reduce((acc, s) => ({ ...acc, [s]: [] }), {}),
                 activeDetailSpace: '전체',
-                detailsBySpace: {
-                    '전체': { lighting: [], electrical: [], carpentry: [], lightingLocations: {} },
-                    '거실': { lighting: [], electrical: [], carpentry: [], lightingLocations: {} },
-                    '안방': { lighting: [], electrical: [], carpentry: [], lightingLocations: {} },
-                    '작은방 1': { lighting: [], electrical: [], carpentry: [], lightingLocations: {} },
-                    '작은방 2': { lighting: [], electrical: [], carpentry: [], lightingLocations: {} },
-                    '주방': { lighting: [], electrical: [], carpentry: [], lightingLocations: {} },
-                    '현관': { lighting: [], electrical: [], carpentry: [], lightingLocations: {} },
-                    '욕실': { lighting: [], electrical: [], carpentry: [], lightingLocations: {} },
-                    '기타': { lighting: [], electrical: [], carpentry: [], lightingLocations: {} }
-                },
+                detailsBySpace: SPACES.reduce((acc, s) => ({
+                    ...acc, [s]: { lighting: [], electrical: [], carpentry: [], lightingLocations: {} }
+                }), {}),
                 systemHangerInfo: '', 
                 entranceDoor: '미선택', 
                 doorStyle: '미선택', 
@@ -221,11 +210,11 @@
             };
 
             const handlePrint = () => window.print();
-            const resetForm = () => { if (window.confirm("시트를 초기화하시겠습니까? 모든 데이터가 삭제됩니다.")) window.location.reload(); };
+            const resetForm = () => { if (window.confirm("시트를 초기화하시겠습니까?")) window.location.reload(); };
 
             const renderBathSection = (type, title, bgColor, borderColor, textColor) => (
                 <div className={`${bgColor} p-6 md:p-8 rounded-[2.5rem] border-2 ${borderColor} relative overflow-hidden group shadow-sm`}>
-                    <div className={`absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform ${textColor}`}><Bath size={160} /></div>
+                    <div className={`absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform ${textColor}`}><Icon name="bath" size={160} /></div>
                     <h3 className={`font-black ${textColor} mb-6 text-xl relative flex items-center gap-2`}><span className={`w-3 h-3 rounded-full bg-current`}></span> {title}</h3>
                     
                     <div className="grid grid-cols-1 gap-8 relative font-bold">
@@ -280,7 +269,6 @@
                             </div>
                         </div>
 
-                        {/* Fitting & Faucet 기구 및 수전 사양 */}
                         <div className="bg-white/60 p-5 md:p-6 rounded-[2rem] border border-slate-100 shadow-sm">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b pb-2 mb-5">Fitting & Faucet 기구 및 수전 사양</p>
                             <div className="space-y-4">
@@ -344,8 +332,8 @@
                     <div className="max-w-6xl mx-auto space-y-6">
                         
                         <div className="flex justify-end gap-2 no-print">
-                            <button onClick={resetForm} className="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-slate-800 transition-colors font-bold"><RotateCcw size={18} /><span>초기화</span></button>
-                            <button onClick={handlePrint} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-2 rounded-xl hover:bg-slate-800 shadow-lg font-bold"><Printer size={18} /><span>인쇄 / PDF 저장</span></button>
+                            <button onClick={resetForm} className="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-slate-800 transition-colors font-bold"><Icon name="rotate-ccw" size={18} /><span>초기화</span></button>
+                            <button onClick={handlePrint} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-2 rounded-xl hover:bg-slate-800 shadow-lg font-bold"><Icon name="printer" size={18} /><span>인쇄 / PDF 저장</span></button>
                         </div>
 
                         <header className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
@@ -396,8 +384,8 @@
                                     </div>
                                 </div>
                                 <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex items-center justify-around gap-2 font-sans font-bold">
-                                    <label className="flex items-center gap-2 cursor-pointer font-bold"><ArrowUpSquare size={16} className={formData.hasElevator ? "text-blue-500" : "text-slate-300"}/><input type="checkbox" name="hasElevator" checked={formData.hasElevator} onChange={handleInputChange} className="w-4 h-4 rounded text-blue-500" /><span className={`text-xs font-black ${formData.hasElevator ? 'text-blue-600' : 'text-slate-400'}`}>엘리베이터</span></label>
-                                    <label className="flex items-center gap-2 cursor-pointer font-bold"><ThermometerSnowflake size={16} className={formData.isOuterWall ? "text-red-500" : "text-slate-300"}/><input type="checkbox" name="isOuterWall" checked={formData.isOuterWall} onChange={handleInputChange} className="w-4 h-4 rounded text-red-500" /><span className={`text-xs font-black ${formData.isOuterWall ? 'text-red-600' : 'text-slate-400'}`}>외벽 라인</span></label>
+                                    <label className="flex items-center gap-2 cursor-pointer font-bold"><Icon name="arrow-up-square" size={16} className={formData.hasElevator ? "text-blue-500" : "text-slate-300"}/><input type="checkbox" name="hasElevator" checked={formData.hasElevator} onChange={handleInputChange} className="w-4 h-4 rounded text-blue-500" /><span className={`text-xs font-black ${formData.hasElevator ? 'text-blue-600' : 'text-slate-400'}`}>엘리베이터</span></label>
+                                    <label className="flex items-center gap-2 cursor-pointer font-bold"><Icon name="thermometer-snowflake" size={16} className={formData.isOuterWall ? "text-red-500" : "text-slate-300"}/><input type="checkbox" name="isOuterWall" checked={formData.isOuterWall} onChange={handleInputChange} className="w-4 h-4 rounded text-red-500" /><span className={`text-xs font-black ${formData.isOuterWall ? 'text-red-600' : 'text-slate-400'}`}>외벽 라인</span></label>
                                 </div>
                             </div>
 
@@ -428,7 +416,7 @@
                                     {formData.airconType === '시스템에어컨' ? (
                                         <div className="grid grid-cols-2 gap-3 font-sans font-bold">
                                             <select className="p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-black text-xs" value={formData.airconBrand} onChange={(e) => setFormData(prev => ({...prev, airconBrand: e.target.value}))}><option value="LG">LG 전자</option><option value="삼성">삼성 전자</option></select>
-                                            <input type="number" placeholder="대수" className="p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-black text-xs text-center" value={formData.airconCount} onChange={(e) => setFormData(prev => ({...prev, airconCount: e.target.value}))} />
+                                            <input type="number" placeholder="대수" className="p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-black text-xs text-center font-bold font-sans" value={formData.airconCount} onChange={(e) => setFormData(prev => ({...prev, airconCount: e.target.value}))} />
                                         </div>
                                     ) : (
                                         <div className="bg-cyan-50 p-4 rounded-2xl text-[10px] text-cyan-700 font-bold leading-relaxed border border-cyan-100 tracking-tighter">* 배관 매립 시 가격 변동 가능성 있음 ▽</div>
@@ -474,11 +462,15 @@
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 font-sans font-bold">
                                 <h3 className="font-black text-amber-600 text-xl flex items-center gap-2"><Layers size={24} /> 마감재 사양</h3>
                                 <div className="flex flex-wrap gap-1.5 print:hidden font-bold">
-                                    {Object.keys(formData.finishesBySpace).map(space => (
-                                        <button key={space} onClick={() => setFormData(p => ({...p, activeFinishSpace: space}))} className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border ${formData.activeFinishSpace === space ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-amber-200'}`}>
-                                            {space}
-                                        </button>
-                                    ))}
+                                    {Object.keys(formData.finishesBySpace).map(space => {
+                                        const finishes = formData.finishesBySpace[space];
+                                        const count = Object.values(finishes).filter(v => v && v !== '미선택').length;
+                                        return (
+                                            <button key={space} onClick={() => setFormData(p => ({...p, activeFinishSpace: space}))} className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border ${formData.activeFinishSpace === space ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-amber-200'}`}>
+                                                {space} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -488,7 +480,7 @@
                                         <div>
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 font-sans font-bold">Floor 바닥재</label>
                                             <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={formData.finishesBySpace[formData.activeFinishSpace].floor} onChange={(e) => handleFinishChange('floor', e.target.value)}>
-                                                {['장판', '강마루', '원목마루', '타일'].map(item => (<option key={item} value={item}>{item}</option>))}
+                                                {['미선택', '장판', '강마루', '원목마루', '타일'].map(item => (<option key={item} value={item}>{item}</option>))}
                                             </select>
                                         </div>
                                         <div>
@@ -497,7 +489,8 @@
                                                 {formData.finishesBySpace[formData.activeFinishSpace].floor === '장판' && (<><option value="보급">보급형</option><option value="표준">표준형</option><option value="고급">고급형</option></>)}
                                                 {formData.finishesBySpace[formData.activeFinishSpace].floor === '강마루' && (<><option value="우드타입">Wood Type</option><option value="석재타입">Stone Type</option></>)}
                                                 {formData.finishesBySpace[formData.activeFinishSpace].floor === '원목마루' && (<><option value="표준">Standard</option><option value="고급">Premium</option></>)}
-                                                {!['장판', '강마루', '원목마루'].includes(formData.finishesBySpace[formData.activeFinishSpace].floor) && (<option value="상담결정">상담 후 결정</option>)}
+                                                {formData.finishesBySpace[formData.activeFinishSpace].floor === '미선택' && (<option value="미선택">미선택</option>)}
+                                                {formData.finishesBySpace[formData.activeFinishSpace].floor !== '미선택' && !['장판', '강마루', '원목마루'].includes(formData.finishesBySpace[formData.activeFinishSpace].floor) && (<option value="상담결정">상담 후 결정</option>)}
                                             </select>
                                         </div>
                                     </div>
@@ -505,13 +498,13 @@
                                         <div>
                                             <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 font-sans font-bold font-sans font-bold">Wall 벽체 마감</label>
                                             <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={formData.finishesBySpace[formData.activeFinishSpace].wall} onChange={(e) => handleFinishChange('wall', e.target.value)}>
-                                                {['실크벽지', '도장', '필름', '디자인월'].map(i => <option key={i} value={i}>{i}</option>)}
+                                                {['미선택', '실크벽지', '도장', '필름', '디자인월'].map(i => <option key={i} value={i}>{i}</option>)}
                                             </select>
                                         </div>
                                         <div>
                                             <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 font-sans font-bold font-sans font-bold">Ceiling 천장 마감</label>
                                             <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={formData.finishesBySpace[formData.activeFinishSpace].ceiling} onChange={(e) => handleFinishChange('ceiling', e.target.value)}>
-                                                {['실크벽지', '도장', '필름'].map(i => <option key={i} value={i}>{i}</option>)}
+                                                {['미선택', '실크벽지', '도장', '필름'].map(i => <option key={i} value={i}>{i}</option>)}
                                             </select>
                                         </div>
                                     </div>
@@ -543,9 +536,14 @@
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                                 <h3 className="font-black text-emerald-600 text-xl flex items-center gap-2"><Box size={24} /> 가구 및 수납 계획</h3>
                                 <div className="flex flex-wrap gap-1.5 print:hidden">
-                                    {Object.keys(formData.furnitureBySpace).map(space => (
-                                        <button key={space} onClick={() => setFormData(p => ({...p, activeSpace: space}))} className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border font-sans font-bold ${formData.activeSpace === space ? 'bg-emerald-500 border-emerald-500 text-white shadow-md' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-emerald-200'}`}>{space}</button>
-                                    ))}
+                                    {Object.keys(formData.furnitureBySpace).map(space => {
+                                        const count = formData.furnitureBySpace[space].length;
+                                        return (
+                                            <button key={space} onClick={() => setFormData(p => ({...p, activeSpace: space}))} className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border font-sans font-bold ${formData.activeSpace === space ? 'bg-emerald-500 border-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-400 hover:border-emerald-200'}`}>
+                                                {space} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -576,9 +574,15 @@
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
                                 <h3 className="font-black text-rose-600 text-xl flex items-center gap-2"><Zap size={24} /> 전기 및 목공 디테일</h3>
                                 <div className="flex flex-wrap gap-1.5 print:hidden">
-                                    {Object.keys(formData.detailsBySpace).map(space => (
-                                        <button key={space} onClick={() => setFormData(p => ({...p, activeDetailSpace: space}))} className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border font-sans font-bold ${formData.activeDetailSpace === space ? 'bg-rose-500 text-white border-rose-500 shadow-md' : 'bg-slate-100 text-slate-400 hover:border-rose-200'}`}>{space}</button>
-                                    ))}
+                                    {Object.keys(formData.detailsBySpace).map(space => {
+                                        const detail = formData.detailsBySpace[space];
+                                        const count = (detail.lighting?.length || 0) + (detail.electrical?.length || 0) + (detail.carpentry?.length || 0);
+                                        return (
+                                            <button key={space} onClick={() => setFormData(p => ({...p, activeDetailSpace: space}))} className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border font-sans font-bold ${formData.activeDetailSpace === space ? 'bg-rose-500 text-white border-rose-500 shadow-md' : 'bg-slate-100 text-slate-400 hover:border-rose-200'}`}>
+                                                {space} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -598,9 +602,25 @@
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-[0.2em] border-b pb-2 font-sans font-bold">목공 마감 (공통)</p>
-                                        <div className="space-y-3">
-                                            <select className="w-full p-2.5 bg-slate-50 rounded-lg text-[11px] font-bold outline-none font-sans" value={formData.moldingType} onChange={(e) => setFormData(p => ({...p, moldingType: e.target.value}))}><option value="미선택">몰딩 선택</option><option value="마이너스">마이너스</option><option value="일반">일반</option></select>
-                                            <select className="w-full p-2.5 bg-slate-50 rounded-lg text-[11px] font-bold outline-none font-sans" value={formData.skirtingType} onChange={(e) => setFormData(p => ({...p, skirtingType: e.target.value}))}><option value="미선택">걸레받이 선택</option><option value="마이너스">마이너스</option><option value="일반">일반</option></select>
+                                        <div className="space-y-3 font-bold">
+                                            <div className="flex flex-col gap-1.5 font-bold">
+                                                <label className="text-[9px] font-black text-slate-400 uppercase">몰딩 선택</label>
+                                                <select className="w-full p-2.5 bg-slate-50 rounded-lg text-[11px] font-bold outline-none font-sans" value={formData.moldingType} onChange={(e) => setFormData(p => ({...p, moldingType: e.target.value}))}>
+                                                    <option value="미선택">미선택</option>
+                                                    <option value="무몰딩">무몰딩</option>
+                                                    <option value="마이너스몰딩">마이너스몰딩</option>
+                                                    <option value="일반몰딩">일반몰딩</option>
+                                                </select>
+                                            </div>
+                                            <div className="flex flex-col gap-1.5 font-bold">
+                                                <label className="text-[9px] font-black text-slate-400 uppercase">걸레받이 선택</label>
+                                                <select className="w-full p-2.5 bg-slate-50 rounded-lg text-[11px] font-bold outline-none font-sans" value={formData.skirtingType} onChange={(e) => setFormData(p => ({...p, skirtingType: e.target.value}))}>
+                                                    <option value="미선택">미선택</option>
+                                                    <option value="무걸레받이">무걸레받이</option>
+                                                    <option value="마이너스 걸레받이">마이너스 걸레받이</option>
+                                                    <option value="일반 걸레받이">일반 걸레받이</option>
+                                                </select>
+                                            </div>
                                         </div>
                                         <div className="mt-6">
                                             <p className="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-[0.2em] border-b pb-2 font-sans font-bold">현관 중문 (공통)</p>
@@ -616,9 +636,9 @@
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
                                         <div>
                                             <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Lightbulb size={16} className="text-orange-400"/> 공간 조명</h4>
-                                            <div className="space-y-3.5">
+                                            <div className="space-y-3.5 font-bold">
                                                 {['메인등', '매립등(다운)', '간접 조명', '라인 조명', '실링팬'].map(light => (
-                                                    <div key={light} className="flex flex-col gap-2 font-bold font-sans font-bold">
+                                                    <div key={light} className="flex flex-col gap-2 font-bold font-sans">
                                                         <label className="flex items-center gap-3 cursor-pointer group font-sans font-bold"><div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${formData.detailsBySpace[formData.activeDetailSpace].lighting.includes(light) ? 'bg-orange-400 border-orange-400 shadow-md' : 'bg-white border-slate-200'}`}>{formData.detailsBySpace[formData.activeDetailSpace].lighting.includes(light) && <Zap size={10} className="text-white fill-current font-sans font-bold"/>}</div><input type="checkbox" className="hidden" checked={formData.detailsBySpace[formData.activeDetailSpace].lighting.includes(light)} onChange={() => toggleDetailForSpace('lighting', light)}/><span className={`text-[12px] font-black ${formData.detailsBySpace[formData.activeDetailSpace].lighting.includes(light) ? 'text-slate-800' : 'text-slate-400 font-sans'}`}>{light}</span></label>
                                                         {formData.detailsBySpace[formData.activeDetailSpace].lighting.includes(light) && (
                                                             <div className="pl-8"><input type="text" placeholder="위치 상세" className="w-full p-2 text-[10px] bg-white border-b-2 border-orange-100 focus:border-orange-300 outline-none font-bold rounded-t-lg transition-all font-sans" value={formData.detailsBySpace[formData.activeDetailSpace].lightingLocations[light] || ''} onChange={(e) => handleDetailLocationChange(light, e.target.value)} /></div>
@@ -629,30 +649,30 @@
                                         </div>
 
                                         <div>
-                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold font-sans font-bold font-sans"><Cpu size={16} className="text-teal-500"/> 공간 전기 & 제어</h4>
-                                            <div className="space-y-3 font-sans font-bold font-sans font-bold">
+                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold font-sans font-bold font-sans font-bold"><Cpu size={16} className="text-teal-500"/> 공간 전기 & 제어</h4>
+                                            <div className="space-y-3 font-sans font-bold font-sans font-bold font-bold">
                                                 {['분전함 교체', '단독 배선', '일괄소등 스위치', 'IoT 시스템 적용'].map(item => (
-                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${formData.detailsBySpace[formData.activeDetailSpace].electrical?.includes(item) ? 'bg-teal-500 border-teal-500 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-teal-100 font-sans'}`}><input type="checkbox" className="hidden" checked={formData.detailsBySpace[formData.activeDetailSpace].electrical?.includes(item)} onChange={() => toggleDetailForSpace('electrical', item)} /><span className="text-[11px] font-black font-sans font-bold">{item}</span></label>
+                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${formData.detailsBySpace[formData.activeDetailSpace].electrical?.includes(item) ? 'bg-teal-500 border-teal-500 text-white shadow-lg font-bold' : 'bg-white border-slate-100 text-slate-400 hover:border-teal-100 font-sans'}`}><input type="checkbox" className="hidden" checked={formData.detailsBySpace[formData.activeDetailSpace].electrical?.includes(item)} onChange={() => toggleDetailForSpace('electrical', item)} /><span className="text-[11px] font-black font-sans font-bold">{item}</span></label>
                                                 ))}
                                             </div>
                                         </div>
 
                                         <div>
-                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold font-sans font-bold font-sans font-bold font-sans"><Hammer size={16} className="text-blue-400 font-sans font-bold font-sans font-bold"/><span className="font-sans font-bold font-sans font-bold font-sans font-bold">공간 목공 & 특수</span></h4>
-                                            <div className="grid grid-cols-1 gap-2.5 font-sans font-bold font-sans font-bold font-sans font-bold">
-                                                {['천장 평탄화', '무몰딩', '일반몰딩', '무걸레받이', '일반 걸레받이', '웨인스코팅', '아치형 개구부'].map(item => (
+                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold font-sans font-bold font-sans font-bold font-sans"><Hammer size={16} className="text-blue-400 font-sans font-bold font-sans font-bold font-bold"/><span className="font-sans font-bold font-sans font-bold font-sans font-bold">공간 목공 & 특수</span></h4>
+                                            <div className="grid grid-cols-1 gap-2.5 font-sans font-bold font-sans font-bold font-sans font-bold font-bold">
+                                                {['천장 평탄화', '가벽설치', '단열공사', '문틀보강', '커튼박스', '웨인스코팅', '아치형 개구부'].map(item => (
                                                     <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${formData.detailsBySpace[formData.activeDetailSpace].carpentry.includes(item) ? 'bg-blue-500 border-blue-500 text-white shadow-lg font-sans font-bold' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-100 font-sans font-bold'}`}><input type="checkbox" className="hidden" checked={formData.detailsBySpace[formData.activeDetailSpace].carpentry.includes(item)} onChange={() => toggleDetailForSpace('carpentry', item)} /><span className="text-[11px] font-black font-sans font-bold">{item}</span></label>
                                                 ))}
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="hidden print:block mt-8 pt-6 border-t-2 border-slate-200 space-y-4 font-sans font-bold">
+                                    <div className="hidden print:block mt-8 pt-6 border-t-2 border-slate-200 space-y-4 font-sans font-bold font-bold">
                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic border-b pb-1 mb-3">Electrical & Carpentry Summary</p>
                                         {Object.entries(formData.detailsBySpace).map(([space, data]) => (data.lighting.length > 0 || (data.electrical && data.electrical.length > 0) || data.carpentry.length > 0) && (
-                                            <div key={space} className="grid grid-cols-4 gap-4 text-[10px] border-b border-slate-50 pb-2 font-sans font-bold font-sans">
-                                                <div className="font-black text-rose-500 font-sans font-bold">[{space}]</div>
-                                                <div className="col-span-3 space-y-1 font-sans font-bold">
+                                            <div key={space} className="grid grid-cols-4 gap-4 text-[10px] border-b border-slate-50 pb-2 font-sans font-bold font-sans font-bold">
+                                                <div className="font-black text-rose-500 font-sans font-bold font-bold">[{space}]</div>
+                                                <div className="col-span-3 space-y-1 font-sans font-bold font-bold">
                                                     {data.lighting.length > 0 && <div className="font-sans font-bold font-sans font-bold font-sans font-bold"><span className="font-bold text-orange-500 font-sans">[조명]</span> {data.lighting.map(l => `${l}${data.lightingLocations[l] ? `(${data.lightingLocations[l]})` : ''}`).join(', ')}</div>}
                                                     {data.electrical && data.electrical.length > 0 && <div className="font-sans font-bold font-sans font-bold font-sans font-bold"><span className="font-bold text-teal-600 font-sans">[전기]</span> {data.electrical.join(', ')}</div>}
                                                     {data.carpentry.length > 0 && <div className="font-sans font-bold font-sans font-bold font-sans font-bold"><span className="font-bold text-blue-500 font-sans">[목공]</span> {data.carpentry.join(', ')}</div>}
@@ -664,9 +684,9 @@
                             </div>
                         </section>
 
-                        <footer className="py-12 text-center text-slate-300 border-t border-slate-100 mt-12 font-bold font-sans">
-                            <p className="text-xs font-black tracking-[0.4em] uppercase mb-2">TOTODESIGN INTERIOR STUDIO</p>
-                            <p className="text-[10px] font-bold">본 시트는 상담 가이드용이며, 상세 내역은 확정 도면 및 견적서를 기준으로 합니다.</p>
+                        <footer className="py-12 text-center text-slate-300 border-t border-slate-100 mt-12 font-bold font-sans font-bold">
+                            <p className="text-xs font-black tracking-[0.4em] uppercase mb-2 font-bold">TOTODESIGN INTERIOR STUDIO</p>
+                            <p className="text-[10px] font-bold font-bold">본 시트는 상담 가이드용이며, 상세 내역은 확정 도면 및 견적서를 기준으로 합니다.</p>
                         </footer>
                     </div>
                     <button onClick={handlePrint} className="fixed bottom-6 right-6 bg-slate-900 text-white p-4 rounded-full shadow-2xl md:hidden hover:scale-110 active:scale-95 transition-all print:hidden z-50 font-bold font-sans font-bold"><Save size={24} /></button>
