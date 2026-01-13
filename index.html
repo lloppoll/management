@@ -81,8 +81,10 @@
         const Lightbulb = (p) => <Icon name="lightbulb" {...p} />;
         const CheckSquare = (p) => <Icon name="check-square" {...p} />;
         const Cpu = (p) => <Icon name="cpu" {...p} />;
+        const Columns = (p) => <Icon name="columns" {...p} />;
 
         const SPACES = ['전체', '거실', '안방', '주방', '현관', '발코니', '드레스룸', '욕실', '기타'];
+        const WALLPAPER_TYPES = ['미선택', '일반실크(베스트)', '고급실크(디아망등)', '프리미엄(포티스)', '광폭합지'];
 
         const InfoItem = ({ icon, label, value }) => (
             <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
@@ -93,6 +95,73 @@
                 </div>
             </div>
         );
+
+        const FinishItem = ({ type, title, icon, value, options, detailKey, detailValue, detailOptions, onMainChange, onDetailChange, activeFinishes }) => {
+            const showDetail = (type === 'wall' && value === '벽지') || (type === 'ceiling' && value === '벽지') || (type === 'floor' && value !== '미선택' && !['도장'].includes(value));
+            
+            const getFloorDetailOptions = () => {
+                if (value === '장판') return ['보급', '표준', '고급'];
+                if (value === '강마루') return ['우드타입', '석재타입'];
+                if (value === '원목마루') return ['표준', '고급'];
+                return [];
+            };
+
+            return (
+                <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-[2rem] border-2 border-slate-100 shadow-sm hover:shadow-md transition-all">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
+                            <Icon name={icon} size={20} />
+                        </div>
+                        <h4 className="text-sm font-black text-slate-800">{title}</h4>
+                    </div>
+                    
+                    <select 
+                        className="w-full p-3 bg-white border-2 border-slate-200 rounded-xl text-xs font-black outline-none focus:border-amber-400 transition-all mb-3" 
+                        value={value} 
+                        onChange={(e) => onMainChange(e.target.value)}
+                    >
+                        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+
+                    {showDetail && (
+                        <div className="mt-3 pt-3 border-t border-slate-200">
+                            {type === 'floor' ? (
+                                <select 
+                                    className="w-full p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-[11px] font-black text-amber-700 outline-none" 
+                                    value={detailValue || '미선택'} 
+                                    onChange={(e) => onDetailChange(e.target.value)}
+                                >
+                                    {getFloorDetailOptions().length > 0 ? (
+                                        getFloorDetailOptions().map(opt => <option key={opt} value={opt}>{opt}</option>)
+                                    ) : (
+                                        <option value="상담결정">상담 후 결정</option>
+                                    )}
+                                </select>
+                            ) : (
+                                <div className="space-y-2">
+                                    <p className="text-[10px] font-black text-amber-600 mb-2">도배지 종류</p>
+                                    <div className="grid grid-cols-1 gap-1.5">
+                                        {detailOptions.map(paper => (
+                                            <button
+                                                key={paper}
+                                                onClick={() => onDetailChange(paper)}
+                                                className={`py-2 px-3 rounded-lg text-[10px] font-black border transition-all ${
+                                                    detailValue === paper 
+                                                        ? 'bg-amber-500 text-white border-amber-500 shadow-sm' 
+                                                        : 'bg-white text-slate-500 border-slate-200 hover:border-amber-300'
+                                                }`}
+                                            >
+                                                {paper}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
 
         const App = () => {
             const [formData, setFormData] = useState({
@@ -488,7 +557,7 @@
                             </div>
                         </div>
 
-                        <section className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border-l-8 border-amber-500 font-bold section-break">
+                        <section className="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-sm border-l-[14px] border-amber-500 relative section-break">
                             {(() => {
                                 const activeFinishes = formData.finishesBySpace[formData.activeFinishSpace] || {
                                     floor: '미선택',
@@ -498,108 +567,80 @@
                                     wallpaperTypeCeiling: '미선택',
                                     ceiling: '미선택'
                                 };
-                                const wallIsPaper = activeFinishes.wall === '벽지';
-                                const ceilingIsPaper = activeFinishes.ceiling === '벽지';
                                 
                                 return (
                                     <>
-                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 font-sans font-bold">
-                                            <h3 className="font-black text-amber-600 text-xl flex items-center gap-2"><Layers size={24} /> 마감재 사양</h3>
-                                            <div className="flex flex-wrap gap-1.5 print:hidden font-bold">
-                                                {Object.keys(formData.finishesBySpace).map(space => {
-                                                    const finishes = formData.finishesBySpace[space] || {};
+                                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-8">
+                                            <div className="flex items-center gap-5">
+                                                <div className="w-14 h-14 bg-amber-500 rounded-[1.5rem] flex items-center justify-center text-white shadow-xl shadow-amber-100">
+                                                    <Layers size={28} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-1">마감재 사양</h3>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="px-2 py-0.5 bg-amber-100 text-amber-600 rounded-md text-[9px] font-black uppercase tracking-tighter">Space Selection</span>
+                                                        <p className="text-[11px] font-bold text-slate-400">공간별 상세 자재를 선택하세요</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex flex-wrap gap-1.5 bg-slate-50 p-2 rounded-[1.5rem] border border-slate-100 print:hidden">
+                                                {SPACES.map(s => {
+                                                    const finishes = formData.finishesBySpace[s] || {};
                                                     const count = Object.values(finishes).filter(v => v && v !== '미선택').length;
                                                     return (
-                                                        <button key={space} onClick={() => setFormData(p => ({...p, activeFinishSpace: space}))} className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border ${formData.activeFinishSpace === space ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-amber-200'}`}>
-                                                            {space} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
+                                                        <button 
+                                                            key={s} 
+                                                            onClick={() => setFormData(p => ({...p, activeFinishSpace: s}))}
+                                                            className={`px-5 py-2.5 rounded-2xl text-[11px] font-black transition-all ${formData.activeFinishSpace === s ? 'bg-amber-500 text-white shadow-lg shadow-amber-100 scale-105' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'}`}
+                                                        >
+                                                            {s} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
                                                         </button>
                                                     );
                                                 })}
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 font-bold">
-                                            <div className="space-y-6">
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 font-sans font-bold">Floor 바닥재</label>
-                                                        <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={activeFinishes.floor} onChange={(e) => handleFinishChange('floor', e.target.value)}>
-                                                            {['미선택', '장판', '강마루', '원목마루', '타일'].map(item => (<option key={item} value={item}>{item}</option>))}
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 font-sans font-bold">세부 등급</label>
-                                                        <select className="w-full p-3 bg-amber-50/50 border border-amber-100 rounded-xl text-xs font-black text-amber-700 outline-none font-bold font-sans font-bold" value={activeFinishes.floorOption} onChange={(e) => handleFinishChange('floorOption', e.target.value)}>
-                                                            {activeFinishes.floor === '장판' && (<><option value="보급">보급형</option><option value="표준">표준형</option><option value="고급">고급형</option></>)}
-                                                            {activeFinishes.floor === '강마루' && (<><option value="우드타입">Wood Type</option><option value="석재타입">Stone Type</option></>)}
-                                                            {activeFinishes.floor === '원목마루' && (<><option value="표준">Standard</option><option value="고급">Premium</option></>)}
-                                                            {activeFinishes.floor === '미선택' && (<option value="미선택">미선택</option>)}
-                                                            {activeFinishes.floor !== '미선택' && !['장판', '강마루', '원목마루'].includes(activeFinishes.floor) && (<option value="상담결정">상담 후 결정</option>)}
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 font-sans font-bold">Wall 벽체 마감</label>
-                                                        <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={activeFinishes.wall} onChange={(e) => handleFinishChange('wall', e.target.value)}>
-                                                            {['미선택', '벽지', '도장', '필름', '디자인월'].map(i => <option key={i} value={i}>{i}</option>)}
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 font-sans font-bold">Ceiling 천장 마감</label>
-                                                        <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={activeFinishes.ceiling} onChange={(e) => handleFinishChange('ceiling', e.target.value)}>
-                                                            {['미선택', '벽지', '도장', '필름'].map(i => <option key={i} value={i}>{i}</option>)}
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-slate-50/50 p-6 rounded-[2rem] border-2 border-slate-50 font-bold">
-                                                {wallIsPaper || ceilingIsPaper ? (
-                                                    <div className="space-y-6">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 font-bold font-sans">Wallpaper Detail 도배지 종류</p>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            {wallIsPaper && (
-                                                                <div className="space-y-2">
-                                                                    <p className="text-[11px] font-black text-amber-700 mb-3">벽체 도배지</p>
-                                                                    <div className="grid grid-cols-1 gap-2">
-                                                                        {['미선택', '일반실크(베스트)', '고급실크(디아망등)', '프리미엄(포티스)', '광폭합지'].map(paper => (
-                                                                            <button 
-                                                                                key={paper} 
-                                                                                onClick={() => handleFinishChange('wallpaperTypeWall', paper)} 
-                                                                                className={`py-2.5 rounded-xl text-[11px] font-black border-2 transition-all font-sans font-bold ${activeFinishes.wallpaperTypeWall === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-200 hover:border-amber-300 hover:text-slate-600'}`}
-                                                                            >
-                                                                                {paper}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                            {ceilingIsPaper && (
-                                                                <div className="space-y-2">
-                                                                    <p className="text-[11px] font-black text-amber-700 mb-3">천장 도배지</p>
-                                                                    <div className="grid grid-cols-1 gap-2">
-                                                                        {['미선택', '일반실크(베스트)', '고급실크(디아망등)', '프리미엄(포티스)', '광폭합지'].map(paper => (
-                                                                            <button 
-                                                                                key={paper} 
-                                                                                onClick={() => handleFinishChange('wallpaperTypeCeiling', paper)} 
-                                                                                className={`py-2.5 rounded-xl text-[11px] font-black border-2 transition-all font-sans font-bold ${activeFinishes.wallpaperTypeCeiling === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-200 hover:border-amber-300 hover:text-slate-600'}`}
-                                                                            >
-                                                                                {paper}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="h-full flex flex-col items-center justify-center text-slate-300 font-bold min-h-[200px]">
-                                                        <CheckSquare size={40} className="mb-2 opacity-20"/>
-                                                        <p className="text-xs">벽지 선택 시 상세 옵션이 표시됩니다</p>
-                                                    </div>
-                                                )}
-                                            </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                            <FinishItem 
+                                                type="floor"
+                                                title="바닥재 (Floor)"
+                                                icon="layout"
+                                                value={activeFinishes.floor}
+                                                options={['미선택', '장판', '강마루', '원목마루', '타일', '도장']}
+                                                detailKey="floorOption"
+                                                detailValue={activeFinishes.floorOption}
+                                                detailOptions={[]}
+                                                onMainChange={(val) => handleFinishChange('floor', val)}
+                                                onDetailChange={(val) => handleFinishChange('floorOption', val)}
+                                                activeFinishes={activeFinishes}
+                                            />
+                                            <FinishItem 
+                                                type="wall"
+                                                title="벽체 마감 (Wall)"
+                                                icon="columns"
+                                                value={activeFinishes.wall}
+                                                options={['미선택', '벽지', '도장', '필름', '디자인월']}
+                                                detailKey="wallpaperTypeWall"
+                                                detailValue={activeFinishes.wallpaperTypeWall}
+                                                detailOptions={WALLPAPER_TYPES}
+                                                onMainChange={(val) => handleFinishChange('wall', val)}
+                                                onDetailChange={(val) => handleFinishChange('wallpaperTypeWall', val)}
+                                                activeFinishes={activeFinishes}
+                                            />
+                                            <FinishItem 
+                                                type="ceiling"
+                                                title="천장 마감 (Ceiling)"
+                                                icon="maximize"
+                                                value={activeFinishes.ceiling}
+                                                options={['미선택', '벽지', '도장', '필름']}
+                                                detailKey="wallpaperTypeCeiling"
+                                                detailValue={activeFinishes.wallpaperTypeCeiling}
+                                                detailOptions={WALLPAPER_TYPES}
+                                                onMainChange={(val) => handleFinishChange('ceiling', val)}
+                                                onDetailChange={(val) => handleFinishChange('wallpaperTypeCeiling', val)}
+                                                activeFinishes={activeFinishes}
+                                            />
                                         </div>
                                     </>
                                 );
