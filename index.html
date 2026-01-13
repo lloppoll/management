@@ -77,6 +77,10 @@
         const Box = (p) => <Icon name="box" {...p} />;
         const Scissors = (p) => <Icon name="scissors" {...p} />;
         const Layout = (p) => <Icon name="layout" {...p} />;
+        const Target = (p) => <Icon name="target" {...p} />;
+        const Building = (p) => <Icon name="building" {...p} />;
+        const Settings = (p) => <Icon name="settings" {...p} />;
+        const Check = (p) => <Icon name="check" {...p} />;
         const Hammer = (p) => <Icon name="hammer" {...p} />;
         const Lightbulb = (p) => <Icon name="lightbulb" {...p} />;
         const CheckSquare = (p) => <Icon name="check-square" {...p} />;
@@ -474,46 +478,99 @@
                                 ))}
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-6 font-bold relative z-10">
-                                <div className="group relative bg-slate-50/50 rounded-2xl border border-transparent focus-within:border-blue-200 focus-within:bg-white transition-all p-4">
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <Icon name="home" size={14} className="text-slate-300 group-focus-within:text-blue-500 transition-colors" />
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">평수</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 font-bold relative z-10">
+                                <div className="group relative bg-gradient-to-br from-slate-50 to-white rounded-2xl border-2 border-slate-100 hover:border-blue-200 focus-within:border-blue-300 focus-within:bg-white transition-all p-5 shadow-sm">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center">
+                                            <Home size={16} className="text-blue-600" />
+                                        </div>
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">평수</span>
                                     </div>
                                     <div className="relative">
-                                        <input type="number" name="area" value={formData.area} onChange={handleInputChange} className="w-full bg-transparent outline-none text-sm font-black text-slate-800" />
+                                        <input type="number" name="area" value={formData.area} onChange={handleInputChange} placeholder="00" className="w-full bg-transparent outline-none text-lg font-black text-slate-800" />
                                         <span className="absolute right-0 top-0 text-sm font-black text-slate-400">평</span>
                                     </div>
                                 </div>
-                                <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase mb-3 block tracking-tighter font-sans">공사 목적</span>
-                                    <div className="flex gap-4">
+                                
+                                <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl border-2 border-slate-100 shadow-sm p-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center">
+                                            <Target size={16} className="text-amber-600" />
+                                        </div>
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">공사 목적</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-3">
                                         {['주거용', '매매계획', '임대용'].map(p => (
-                                            <label key={p} className="flex items-center gap-2 cursor-pointer">
-                                                <input type="radio" name="residencePurpose" value={p} checked={formData.residencePurpose === p} onChange={handleInputChange} className="w-4 h-4 text-blue-600 font-sans" />
-                                                <span className={`text-xs font-black ${formData.residencePurpose === p ? 'text-blue-700' : 'text-slate-500'} font-sans`}>{p}</span>
+                                            <label key={p} className="flex items-center gap-2 cursor-pointer group">
+                                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                                                    formData.residencePurpose === p 
+                                                        ? 'bg-blue-500 border-blue-500' 
+                                                        : 'bg-white border-slate-300 group-hover:border-blue-300'
+                                                }`}>
+                                                    {formData.residencePurpose === p && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                                                </div>
+                                                <input type="radio" name="residencePurpose" value={p} checked={formData.residencePurpose === p} onChange={handleInputChange} className="hidden" />
+                                                <span className={`text-xs font-black transition-colors ${formData.residencePurpose === p ? 'text-blue-700' : 'text-slate-500 group-hover:text-slate-700'}`}>{p}</span>
                                             </label>
                                         ))}
                                     </div>
                                 </div>
-                                <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter font-sans">유형 & 층수</span>
-                                    <div className="flex items-center gap-2 font-sans font-bold font-sans">
-                                        <select name="buildingType" value={formData.buildingType} onChange={handleInputChange} className="bg-transparent text-xs font-black text-slate-700 outline-none">
+                                
+                                <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl border-2 border-slate-100 shadow-sm p-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-8 h-8 bg-purple-100 rounded-xl flex items-center justify-center">
+                                            <Building size={16} className="text-purple-600" />
+                                        </div>
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">유형 & 층수</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <select name="buildingType" value={formData.buildingType} onChange={handleInputChange} className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-black text-slate-700 outline-none focus:border-purple-400 transition-colors">
                                             {['아파트', '주택', '빌라', '상가', '기타'].map(type => (<option key={type} value={type}>{type}</option>))}
                                         </select>
-                                        <div className="w-[1px] h-4 bg-slate-200"></div>
-                                        <div className="flex items-center gap-1">
-                                            <input type="text" name="floorInfo" value={formData.floorInfo} onChange={handleInputChange} placeholder="00" className="w-10 bg-transparent text-xs font-black text-blue-600 text-center outline-none" />
-                                            <span className="text-xs font-black text-blue-600">(층)</span>
+                                        <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-2">
+                                            <input type="text" name="floorInfo" value={formData.floorInfo} onChange={handleInputChange} placeholder="00" className="w-10 bg-transparent text-xs font-black text-purple-600 text-center outline-none" />
+                                            <span className="text-xs font-black text-purple-600">(층)</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex items-center justify-center gap-2 font-sans font-bold">
-                                    <label className="flex items-center gap-2 cursor-pointer font-bold"><Icon name="arrow-up-square" size={16} className={formData.hasElevator ? "text-blue-500" : "text-slate-300"}/><input type="checkbox" name="hasElevator" checked={formData.hasElevator} onChange={handleInputChange} className="w-4 h-4 rounded text-blue-500" /><span className={`text-xs font-black ${formData.hasElevator ? 'text-blue-600' : 'text-slate-400'}`}>엘리베이터</span></label>
-                                </div>
-                                <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex items-center justify-center gap-2 font-sans font-bold">
-                                    <label className="flex items-center gap-2 cursor-pointer font-bold"><Icon name="thermometer-snowflake" size={16} className={formData.isOuterWall ? "text-red-500" : "text-slate-300"}/><input type="checkbox" name="isOuterWall" checked={formData.isOuterWall} onChange={handleInputChange} className="w-4 h-4 rounded text-red-500" /><span className={`text-xs font-black ${formData.isOuterWall ? 'text-red-600' : 'text-slate-400'}`}>외벽 라인</span></label>
+                                
+                                <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl border-2 border-slate-100 shadow-sm p-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center">
+                                            <Settings size={16} className="text-green-600" />
+                                        </div>
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">옵션</span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 cursor-pointer group p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                                                formData.hasElevator 
+                                                    ? 'bg-blue-500 border-blue-500' 
+                                                    : 'bg-white border-slate-300 group-hover:border-blue-300'
+                                            }`}>
+                                                {formData.hasElevator && <Check size={12} className="text-white" />}
+                                            </div>
+                                            <input type="checkbox" name="hasElevator" checked={formData.hasElevator} onChange={handleInputChange} className="hidden" />
+                                            <div className="flex items-center gap-2">
+                                                <ArrowUpSquare size={14} className={formData.hasElevator ? "text-blue-500" : "text-slate-300"} />
+                                                <span className={`text-xs font-black ${formData.hasElevator ? 'text-blue-600' : 'text-slate-400'}`}>엘리베이터</span>
+                                            </div>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer group p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                                                formData.isOuterWall 
+                                                    ? 'bg-red-500 border-red-500' 
+                                                    : 'bg-white border-slate-300 group-hover:border-red-300'
+                                            }`}>
+                                                {formData.isOuterWall && <Check size={12} className="text-white" />}
+                                            </div>
+                                            <input type="checkbox" name="isOuterWall" checked={formData.isOuterWall} onChange={handleInputChange} className="hidden" />
+                                            <div className="flex items-center gap-2">
+                                                <ThermometerSnowflake size={14} className={formData.isOuterWall ? "text-red-500" : "text-slate-300"} />
+                                                <span className={`text-xs font-black ${formData.isOuterWall ? 'text-red-600' : 'text-slate-400'}`}>외벽 라인</span>
+                                            </div>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
 
