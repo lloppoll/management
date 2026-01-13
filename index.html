@@ -270,13 +270,17 @@
 
             const toggleFurnitureForSpace = (item) => {
                 const space = formData.activeSpace;
-                setFormData(prev => ({
-                    ...prev,
-                    furnitureBySpace: {
-                        ...prev.furnitureBySpace,
-                        [space]: prev.furnitureBySpace[space].includes(item) ? prev.furnitureBySpace[space].filter(i => i !== item) : [...prev.furnitureBySpace[space], item]
-                    }
-                }));
+                setFormData(prev => {
+                    const currentFurniture = Array.isArray(prev.furnitureBySpace[space]) ? prev.furnitureBySpace[space] : [];
+                    const exists = currentFurniture.includes(item);
+                    return {
+                        ...prev,
+                        furnitureBySpace: {
+                            ...prev.furnitureBySpace,
+                            [space]: exists ? currentFurniture.filter(i => i !== item) : [...currentFurniture, item]
+                        }
+                    };
+                });
             };
 
             const toggleDetailForSpace = (category, item) => {
@@ -398,21 +402,32 @@
                                         </div>
                                         
                                         <div className="flex flex-wrap items-center gap-4">
-                                            <div className="flex gap-1.5 p-1 bg-slate-100 rounded-xl font-bold">
-                                                {['표준형', '고급형'].map(opt => (
-                                                    <button
-                                                        key={opt}
-                                                        onClick={() => handleBathChange(type, item.key, opt)}
-                                                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${
-                                                            formData[type][item.key] === opt 
-                                                            ? 'bg-white text-slate-900 shadow-sm' 
-                                                            : 'text-slate-400 hover:text-slate-600'
-                                                        }`}
-                                                    >
-                                                        {opt}
-                                                    </button>
-                                                ))}
-                                            </div>
+                                            {item.key === 'zendai' ? (
+                                                <select 
+                                                    value={formData[type][item.key]} 
+                                                    onChange={(e) => handleBathChange(type, item.key, e.target.value)}
+                                                    className="px-4 py-1.5 bg-slate-100 rounded-xl text-[10px] font-black text-slate-900 outline-none border-0 focus:ring-2 focus:ring-indigo-300"
+                                                >
+                                                    <option value="표준형">표준형</option>
+                                                    <option value="고급형">고급형</option>
+                                                </select>
+                                            ) : (
+                                                <div className="flex gap-1.5 p-1 bg-slate-100 rounded-xl font-bold">
+                                                    {['표준형', '고급형'].map(opt => (
+                                                        <button
+                                                            key={opt}
+                                                            onClick={() => handleBathChange(type, item.key, opt)}
+                                                            className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${
+                                                                formData[type][item.key] === opt 
+                                                                ? 'bg-white text-slate-900 shadow-sm' 
+                                                                : 'text-slate-400 hover:text-slate-600'
+                                                            }`}
+                                                        >
+                                                            {opt}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
 
                                             {item.hasEmbed && (
                                                 <label className="flex items-center gap-2 cursor-pointer group px-2">
@@ -651,14 +666,14 @@
                                         <label
                                             key={room}
                                             className={`flex items-center justify-center p-3 border-2 rounded-2xl cursor-pointer transition-all ${
-                                                formData.extensions.includes(room)
+                                                (formData.extensions || []).includes(room)
                                                     ? 'bg-orange-50 border-orange-200 text-orange-700 shadow-sm'
                                                     : 'bg-slate-50 border-transparent text-slate-400'
                                             }`}
                                         >
                                             <input
                                                 type="checkbox"
-                                                checked={formData.extensions.includes(room)}
+                                                checked={(formData.extensions || []).includes(room)}
                                                 onChange={() => toggleArrayItem('extensions', room)}
                                                 className="hidden"
                                             />
@@ -676,7 +691,7 @@
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 mb-4">빌트인 가전</p>
                                     <div className="space-y-3 font-bold">
                                         {['키친핏 냉장고', '인덕션', '빌트인 후드', '식기세척기', '냉온정수기'].map(item => (
-                                            <label key={item} className="flex items-center gap-3 cursor-pointer group"><input type="checkbox" className="w-4 h-4 rounded text-teal-600 font-sans" checked={formData.kitchenAppliances.includes(item)} onChange={() => toggleArrayItem('kitchenAppliances', item)}/><span className="text-xs font-black text-slate-600 group-hover:text-teal-600 transition-colors">{item}</span></label>
+                                            <label key={item} className="flex items-center gap-3 cursor-pointer group"><input type="checkbox" className="w-4 h-4 rounded text-teal-600 font-sans" checked={(formData.kitchenAppliances || []).includes(item)} onChange={() => toggleArrayItem('kitchenAppliances', item)}/><span className="text-xs font-black text-slate-600 group-hover:text-teal-600 transition-colors">{item}</span></label>
                                         ))}
                                     </div>
                                 </div>
@@ -690,7 +705,7 @@
                                                     key={type} 
                                                     onClick={() => toggleArrayItem('kitchenType', type)} 
                                                     className={`py-2.5 rounded-lg text-[10px] font-black border-2 transition-all font-sans font-bold ${
-                                                        formData.kitchenType.includes(type) 
+                                                        (formData.kitchenType || []).includes(type) 
                                                             ? 'bg-teal-500 text-white border-teal-500 shadow-md' 
                                                             : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-teal-300'
                                                     }`}
