@@ -91,6 +91,7 @@
                 customerName: '',
                 contact: '',
                 siteName: '',
+                area: '',
                 workDate: '',
                 budget: '',
                 familyCount: '',
@@ -364,11 +365,12 @@
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 font-bold">
-                                {[{ label: '고객명', name: 'customerName', icon: <User size={18}/> }, { label: '연락처', name: 'contact', icon: <Phone size={18}/> }, { label: '현장명', name: 'siteName', icon: <MapPin size={18}/> }, { label: '공사예정일', name: 'workDate', icon: <Calendar size={18}/>, type: 'date' }, { label: '예산금액', name: 'budget', icon: <Wallet size={18}/>, type: 'number' }, { label: '가족인원', name: 'familyCount', icon: <Users size={18}/>, type: 'number' }].map((field) => (
+                                {[{ label: '고객명', name: 'customerName', icon: <User size={18}/> }, { label: '연락처', name: 'contact', icon: <Phone size={18}/> }, { label: '현장명', name: 'siteName', icon: <MapPin size={18}/> }, { label: '평수', name: 'area', icon: <Home size={18}/>, type: 'number' }, { label: '공사예정일', name: 'workDate', icon: <Calendar size={18}/>, type: 'date' }, { label: '예산금액', name: 'budget', icon: <Wallet size={18}/>, type: 'number' }, { label: '가족인원', name: 'familyCount', icon: <Users size={18}/>, type: 'number' }].map((field) => (
                                     <div key={field.name} className="relative group">
                                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors">{field.icon}</div>
-                                        <input type={field.type || 'text'} name={field.name} value={formData[field.name]} onChange={handleInputChange} placeholder={field.label + (field.name === 'budget' ? ' (만원)' : '')} className="w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all font-bold font-sans" />
+                                        <input type={field.type || 'text'} name={field.name} value={formData[field.name]} onChange={handleInputChange} placeholder={field.label + (field.name === 'budget' ? ' (만원)' : (field.name === 'area' ? ' (평)' : ''))} className="w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all font-bold font-sans" />
                                         {field.name === 'budget' && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">만원</span>}
+                                        {field.name === 'area' && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">평</span>}
                                     </div>
                                 ))}
                             </div>
@@ -377,6 +379,7 @@
                                 <InfoItem icon={<User size={16} />} label="고객명" value={formData.customerName} />
                                 <InfoItem icon={<Phone size={16} />} label="연락처" value={formData.contact} />
                                 <InfoItem icon={<MapPin size={16} />} label="현장명" value={formData.siteName} />
+                                <InfoItem icon={<Home size={16} />} label="평수" value={formData.area ? `${formData.area} 평` : ''} />
                                 <InfoItem icon={<Wallet size={16} />} label="예산금액" value={formData.budget ? `${formData.budget} 만원` : ''} />
                                 <InfoItem icon={<Calendar size={16} />} label="공사 예정일" value={formData.workDate} />
                                 <InfoItem icon={<Users size={16} />} label="가족 인원" value={formData.familyCount} />
