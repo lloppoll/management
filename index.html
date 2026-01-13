@@ -244,10 +244,14 @@
             };
 
             const toggleArrayItem = (listName, item) => {
-                setFormData(prev => ({
-                    ...prev,
-                    [listName]: prev[listName].includes(item) ? prev[listName].filter(i => i !== item) : [...prev[listName], item]
-                }));
+                setFormData(prev => {
+                    const current = Array.isArray(prev[listName]) ? prev[listName] : [];
+                    const exists = current.includes(item);
+                    return {
+                        ...prev,
+                        [listName]: exists ? current.filter(i => i !== item) : [...current, item]
+                    };
+                });
             };
 
             const handleFinishChange = (key, value) => {
@@ -969,6 +973,19 @@
                                         </div>
 
                                         <div>
+                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Box size={16} className="text-rose-400"/> 현관 중문</h4>
+                                            <div className="font-bold">
+                                                <select className="w-full p-3 bg-white border-2 border-rose-100 rounded-xl outline-none text-xs font-black text-rose-700 focus:border-rose-400 transition-colors" value={currentDoorDetails.entranceDoor} onChange={(e) => handleDoorDetailChange('entranceDoor', e.target.value)}>
+                                                    <option value="미선택">미선택</option>
+                                                    <option value="초슬림 3연동">초슬림 3연동</option>
+                                                    <option value="원슬라이딩">원슬라이딩</option>
+                                                    <option value="비대칭 여닫이">비대칭 여닫이</option>
+                                                    <option value="스윙도어">스윙도어</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div>
                                             <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Scissors size={16} className="text-amber-400"/> 목공 마감</h4>
                                             <div className="space-y-4 font-bold">
                                                 <div>
@@ -989,19 +1006,6 @@
                                                         <option value="일반 걸레받이">일반 걸레받이</option>
                                                     </select>
                                                 </div>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Box size={16} className="text-rose-400"/> 현관 중문</h4>
-                                            <div className="font-bold">
-                                                <select className="w-full p-3 bg-white border-2 border-rose-100 rounded-xl outline-none text-xs font-black text-rose-700 focus:border-rose-400 transition-colors" value={currentDoorDetails.entranceDoor} onChange={(e) => handleDoorDetailChange('entranceDoor', e.target.value)}>
-                                                    <option value="미선택">미선택</option>
-                                                    <option value="초슬림 3연동">초슬림 3연동</option>
-                                                    <option value="원슬라이딩">원슬라이딩</option>
-                                                    <option value="비대칭 여닫이">비대칭 여닫이</option>
-                                                    <option value="스윙도어">스윙도어</option>
-                                                </select>
                                             </div>
                                         </div>
                                     </div>
