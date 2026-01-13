@@ -456,32 +456,23 @@
                                     { label: '현장명', name: 'siteName', icon: 'map-pin' },
                                     { label: '공사일정', name: 'workDate', icon: 'calendar', type: 'date' },
                                     { label: '예산(만원)', name: 'budget', icon: 'wallet', type: 'number' },
-                                    { label: '가족인원', name: 'familyCount', icon: 'users', type: 'number' }
+                                    { label: '가족인원', name: 'familyCount', icon: 'users', type: 'number' },
+                                    { label: '평수', name: 'area', icon: 'home', type: 'number', suffix: '평' }
                                 ].map(f => (
                                     <div key={f.name} className="group relative bg-slate-50/50 rounded-2xl border border-transparent focus-within:border-blue-200 focus-within:bg-white transition-all p-4">
                                         <div className="flex items-center gap-3 mb-1">
                                             <Icon name={f.icon} size={14} className="text-slate-300 group-focus-within:text-blue-500 transition-colors" />
                                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{f.label}</span>
                                         </div>
-                                        <input type={f.type || 'text'} name={f.name} value={formData[f.name]} onChange={handleInputChange} className="w-full bg-transparent outline-none text-sm font-black text-slate-800" />
+                                        <div className="relative">
+                                            <input type={f.type || 'text'} name={f.name} value={formData[f.name]} onChange={handleInputChange} className="w-full bg-transparent outline-none text-sm font-black text-slate-800" />
+                                            {f.suffix && <span className="absolute right-0 top-0 text-sm font-black text-slate-400">{f.suffix}</span>}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 relative z-10 mt-6 font-bold">
-                                <div className="relative group">
-                                    <label className="flex items-center gap-2 mb-2 text-xs font-black text-slate-600">
-                                        <span className="text-slate-400"><Home size={18}/></span>
-                                        <span>평수</span>
-                                    </label>
-                                    <div className="relative">
-                                        <input type="number" name="area" value={formData.area} onChange={handleInputChange} placeholder="평수 (평)" className="w-full pl-4 pr-12 py-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all font-bold font-sans" />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">평</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 font-bold">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 font-bold relative z-10">
                                 <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
                                     <span className="text-[10px] font-black text-slate-400 uppercase mb-3 block tracking-tighter font-sans">공사 목적</span>
                                     <div className="flex gap-4">
