@@ -41,9 +41,9 @@
         @media print {
             .no-print { display: none !important; }
             body { background-color: white; padding: 0; }
-            .section-break {
-                page-break-inside: avoid;
-                break-inside: avoid;
+            section, .section-break {
+                page-break-inside: avoid !important;
+                break-inside: avoid-page !important;
                 margin-bottom: 2rem;
             }
             .card {
@@ -52,10 +52,11 @@
             }
         }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+        .summary-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.5rem;
+            padding: 1.25rem;
         }
     </style>
 </head>
@@ -65,7 +66,7 @@
     <script type="text/babel">
         const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
-        // 아이콘 컴포넌트 (DOM 충돌 방지 로직 포함)
+        // 아이콘 컴포넌트
         const Icon = ({ name, size = 20, className = "" }) => {
             const containerRef = useRef(null);
             useEffect(() => {
@@ -89,7 +90,6 @@
         const SPACES = ['전체', '거실', '안방', '주방', '현관', '발코니', '드레스룸', '욕실', '기타'];
         const WALLPAPER_TYPES = ['미선택', '일반실크', '고급실크', '프리미엄', '광폭합지'];
 
-        // 세련된 섹션 타이틀 컴포넌트
         const SectionHeader = ({ icon, title, subTitle, colorClass = "text-slate-800" }) => (
             <div className="flex items-center gap-4 mb-8">
                 <div className={`p-3 rounded-2xl bg-white shadow-sm border border-slate-100 ${colorClass}`}>
@@ -102,7 +102,6 @@
             </div>
         );
 
-        // 마감재 개별 아이템 디자인 개선
         const FinishItem = ({ type, title, icon, value, options, detailValue, detailOptions, onMainChange, onDetailChange }) => {
             const showDetail = (type === 'wall' && value === '벽지') || (type === 'ceiling' && value === '벽지') || (type === 'floor' && value !== '미선택' && !['도장'].includes(value));
             
@@ -185,12 +184,12 @@
                 publicBath: {
                     tub: '미선택', partition: '미선택', trench: '일반육가', cabinet: '미선택', tileType: '포세린', tileSize: '600*600',
                     ceiling: '미선택', ventFan: '미선택', toilet: '표준형', sink: '표준형', sinkFaucet: '표준형', isSinkFaucetEmbedded: false,
-                    tubFaucet: '표준형', isTubFaucetEmbedded: false, showerHead: '표준형', isShowerHeadEmbedded: false, zendai: '표준형'
+                    tubFaucet: '표준형', isTubFaucetEmbedded: false, showerHead: '표준형', isShowerHeadEmbedded: false, zendai: false
                 },
                 masterBath: {
                     tub: '미선택', partition: '미선택', trench: '일반육가', cabinet: '미선택', tileType: '포세린', tileSize: '600*600',
                     ceiling: '미선택', ventFan: '미선택', toilet: '표준형', sink: '표준형', sinkFaucet: '표준형', isSinkFaucetEmbedded: false,
-                    tubFaucet: '표준형', isTubFaucetEmbedded: false, showerHead: '표준형', isShowerHeadEmbedded: false, zendai: '표준형'
+                    tubFaucet: '표준형', isTubFaucetEmbedded: false, showerHead: '표준형', isShowerHeadEmbedded: false, zendai: false
                 },
                 activeSpace: '전체',
                 furnitureBySpace: SPACES.reduce((acc, s) => ({ ...acc, [s]: [] }), {}),
@@ -304,7 +303,6 @@
 
                 return (
                     <div className={`${colors.bg} p-8 rounded-[3rem] border ${colors.border} relative overflow-hidden section-break`}>
-                        <div className={`absolute -top-10 -right-10 opacity-[0.03] ${colors.text}`}><Icon name="bath" size={200} /></div>
                         <h3 className={`text-xl font-extrabold ${colors.text} mb-8 flex items-center gap-3`}>
                             <span className={`w-2 h-6 ${colors.accent} rounded-full`}></span> {title}
                         </h3>
@@ -361,23 +359,34 @@
                             <p className="text-[11px] font-extrabold text-slate-500 uppercase tracking-[0.2em] mb-6 border-b border-slate-100 pb-3">Fitting & Faucet 사양</p>
                             <div className="space-y-1">
                                 {[
-                                    { label: '양변기', key: 'toilet', hasEmbed: false },
-                                    { label: '세면대', key: 'sink', hasEmbed: false },
-                                    { label: '세면수전', key: 'sinkFaucet', hasEmbed: true, embedKey: 'isSinkFaucetEmbedded' },
-                                    { label: '욕조수전', key: 'tubFaucet', hasEmbed: true, embedKey: 'isTubFaucetEmbedded' },
-                                    { label: '샤워기(슬바)', key: 'showerHead', hasEmbed: true, embedKey: 'isShowerHeadEmbedded' },
-                                    { label: '젠다이', key: 'zendai', hasEmbed: false }
+                                    { label: '양변기', key: 'toilet', type: 'toggle' },
+                                    { label: '세면대', key: 'sink', type: 'toggle' },
+                                    { label: '세면수전', key: 'sinkFaucet', type: 'toggle', hasEmbed: true, embedKey: 'isSinkFaucetEmbedded' },
+                                    { label: '욕조수전', key: 'tubFaucet', type: 'toggle', hasEmbed: true, embedKey: 'isTubFaucetEmbedded' },
+                                    { label: '샤워기(슬바)', key: 'showerHead', type: 'toggle', hasEmbed: true, embedKey: 'isShowerHeadEmbedded' },
+                                    { label: '젠다이 설치', key: 'zendai', type: 'checkbox' }
                                 ].map((item) => (
                                     <div key={item.key} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 border-b border-slate-100/50 last:border-0 hover:bg-white/30 px-2 rounded-xl transition-colors">
                                         <span className="text-[13px] font-bold text-slate-700">{item.label}</span>
                                         <div className="flex flex-wrap items-center gap-4">
-                                            <div className="flex gap-1 p-1 bg-slate-200/50 rounded-xl">
-                                                {['표준형', '고급형'].map(opt => (
-                                                    <button key={opt} type="button" onClick={() => handleBathChange(type, item.key, opt)} className={`px-5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${bathData[item.key] === opt ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>{opt}</button>
-                                                ))}
-                                            </div>
-                                            {item.hasEmbed && (
+                                            {item.type === 'toggle' ? (
+                                                <div className="flex gap-1 p-1 bg-slate-200/50 rounded-xl">
+                                                    {['표준형', '고급형'].map(opt => (
+                                                        <button key={opt} type="button" onClick={() => handleBathChange(type, item.key, opt)} className={`px-5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${bathData[item.key] === opt ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>{opt}</button>
+                                                    ))}
+                                                </div>
+                                            ) : (
                                                 <label className="flex items-center gap-2 cursor-pointer group">
+                                                    <div className={`w-10 h-6 rounded-full relative transition-all ${bathData[item.key] ? 'bg-indigo-500' : 'bg-slate-300'}`}>
+                                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${bathData[item.key] ? 'left-5' : 'left-1'}`}></div>
+                                                    </div>
+                                                    <input type="checkbox" className="hidden" checked={!!bathData[item.key]} onChange={(e) => handleBathChange(type, item.key, e.target.checked)} />
+                                                    <span className={`text-[11px] font-bold ${bathData[item.key] ? 'text-indigo-600' : 'text-slate-400'}`}>{bathData[item.key] ? '설치' : '미설치'}</span>
+                                                </label>
+                                            )}
+
+                                            {item.hasEmbed && (
+                                                <label className="flex items-center gap-2 cursor-pointer group ml-2">
                                                     <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${bathData[item.embedKey] ? 'bg-indigo-500 border-indigo-500' : 'bg-white border-slate-200'}`}>
                                                         {bathData[item.embedKey] && <Icon name="check" size={12} className="text-white" />}
                                                     </div>
@@ -406,8 +415,6 @@
 
                         {/* 헤더 섹션 */}
                         <header className="bg-white p-10 md:p-16 rounded-[4rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden section-break">
-                            <div className="absolute top-0 right-0 p-16 opacity-[0.02] -rotate-12 pointer-events-none"><Icon name="home" size={400} /></div>
-                            
                             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
@@ -604,6 +611,16 @@
                             <section className="bg-white p-8 rounded-[3.5rem] shadow-sm border border-slate-100 section-break">
                                 <SectionHeader title="주방 가구 사양" subTitle="Kitchen Specification" icon="utensils" colorClass="text-teal-600" />
                                 <div className="space-y-6">
+                                    {/* 주방 레이아웃 추가 */}
+                                    <div className="bg-slate-50/50 p-6 rounded-[2.5rem] space-y-4">
+                                        <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest px-1">주방 레이아웃</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {['일자형', 'ㄱ자형', 'ㄷ자형', '아일랜드', '대면형'].map(layout => (
+                                                <button key={layout} onClick={() => toggleArrayItem('kitchenType', layout)} className={`px-4 py-2.5 rounded-xl text-[11px] font-bold border transition-all ${formData.kitchenType.includes(layout) ? 'bg-teal-600 border-teal-600 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 hover:border-teal-200'}`}>{layout}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+
                                     <div className="bg-slate-50/50 p-6 rounded-[2.5rem] space-y-4">
                                         <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest px-1">빌트인 가전 리스트</p>
                                         <div className="flex flex-wrap gap-2">
@@ -630,7 +647,7 @@
                             </section>
                         </div>
 
-                        {/* 마감재 상세 섹션 - 디자인 혁신 */}
+                        {/* 마감재 상세 섹션 */}
                         <section className="bg-white p-10 md:p-14 rounded-[4rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative section-break">
                             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-10">
                                 <SectionHeader title="공간별 마감재 선택" subTitle="Surface Finishing" icon="layers" colorClass="text-amber-500" />
@@ -646,11 +663,6 @@
                             </div>
 
                             <div className="relative p-10 bg-slate-50/50 rounded-[3.5rem] border border-slate-100">
-                                <div className="absolute top-8 left-8 opacity-[0.05] flex items-center gap-3 text-amber-500 font-black">
-                                    <Icon name="layout" size={60} />
-                                    <span className="text-4xl uppercase tracking-tighter">{formData.activeFinishSpace}</span>
-                                </div>
-                                
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
                                     <FinishItem 
                                         type="floor" title="바닥 (Floor)" icon="monitor" value={activeFinishes.floor}
@@ -718,16 +730,27 @@
                                         })}
                                     </div>
                                 </div>
-                                <div className="flex flex-col justify-between py-2">
+                                <div className="flex flex-col gap-6">
                                     <div>
                                         <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-4 px-1">가구 제작 및 시스템 상세</p>
                                         <textarea name="systemHangerInfo" value={formData.systemHangerInfo} onChange={handleInputChange} placeholder="시스템 행거 구성, 제작 가구 도어 사양, 내부 구성 등..." className="w-full p-8 bg-slate-50 border-0 rounded-[3rem] h-64 focus:bg-white focus:ring-4 focus:ring-emerald-50 outline-none text-sm font-medium transition-all" />
                                     </div>
-                                    <div className="hidden print:block mt-6 space-y-2 border-t border-slate-100 pt-6">
-                                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest italic">Summary Checklist</p>
-                                        {Object.entries(formData.furnitureBySpace).map(([space, items]) => items.length > 0 && (
-                                            <div key={space} className="flex gap-2 items-center text-xs"><span className="font-extrabold text-emerald-600">[{space}]</span> <span className="font-medium text-slate-600">{items.join(', ')}</span></div>
-                                        ))}
+                                    {/* 써머리 상시 노출 영역 */}
+                                    <div className="summary-box">
+                                        <p className="text-[11px] font-black text-emerald-600 uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-emerald-100 pb-2">
+                                            <Icon name="check-square" size={14} /> 가구 선택 요약 (Checklist Summary)
+                                        </p>
+                                        <div className="space-y-2">
+                                            {Object.entries(formData.furnitureBySpace).map(([space, items]) => items.length > 0 && (
+                                                <div key={space} className="flex gap-2 items-start text-[11px]">
+                                                    <span className="font-bold text-emerald-700 min-w-[50px]">[{space}]</span> 
+                                                    <span className="font-medium text-slate-600 leading-tight">{items.join(', ')}</span>
+                                                </div>
+                                            ))}
+                                            {Object.values(formData.furnitureBySpace).every(arr => arr.length === 0) && (
+                                                <p className="text-xs text-slate-400 italic">선택된 가구가 없습니다.</p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -796,6 +819,30 @@
                                 </div>
                             </div>
 
+                            {/* 전기/목공 써머리 상시 노출 영역 */}
+                            <div className="summary-box mb-10 border-rose-100">
+                                <p className="text-[11px] font-black text-rose-600 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-rose-100 pb-2">
+                                    <Icon name="file-text" size={14} /> 전기 및 목공 상세 요약 (Technical Summary)
+                                </p>
+                                <div className="space-y-3">
+                                    {Object.entries(formData.detailsBySpace).map(([space, data]) => (
+                                        (data.lighting.length > 0 || data.electrical.length > 0 || data.carpentry.length > 0) && (
+                                            <div key={space} className="grid grid-cols-1 md:grid-cols-4 gap-2 text-[11px] bg-white p-3 rounded-2xl border border-slate-100">
+                                                <div className="font-bold text-rose-700">[{space}]</div>
+                                                <div className="md:col-span-3 space-y-1">
+                                                    {data.lighting.length > 0 && <div className="flex gap-2"><span className="text-orange-500 font-bold w-12 shrink-0">조명:</span> <span className="text-slate-600">{data.lighting.map(l => `${l}${data.lightingLocations[l] ? `(${data.lightingLocations[l]})` : ''}`).join(', ')}</span></div>}
+                                                    {data.electrical.length > 0 && <div className="flex gap-2"><span className="text-teal-600 font-bold w-12 shrink-0">전기:</span> <span className="text-slate-600">{data.electrical.join(', ')}</span></div>}
+                                                    {data.carpentry.length > 0 && <div className="flex gap-2"><span className="text-blue-600 font-bold w-12 shrink-0">목공:</span> <span className="text-slate-600">{data.carpentry.join(', ')}</span></div>}
+                                                </div>
+                                            </div>
+                                        )
+                                    ))}
+                                    {Object.values(formData.detailsBySpace).every(d => d.lighting.length === 0 && d.electrical.length === 0 && d.carpentry.length === 0) && (
+                                        <p className="text-xs text-slate-400 italic">기록된 상세 디테일이 없습니다.</p>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* 도어 및 몰딩 하단 통합 영역 */}
                             <div className="bg-slate-900 text-white p-10 rounded-[3.5rem] grid grid-cols-1 md:grid-cols-3 gap-10">
                                 {(() => {
@@ -837,7 +884,7 @@
                         </section>
 
                         {/* 푸터 */}
-                        <footer className="py-20 text-center space-y-4 border-t border-slate-200 mt-20">
+                        <footer className="py-20 text-center space-y-4 border-t border-slate-200 mt-20 section-break">
                             <div className="flex justify-center items-center gap-4 mb-4">
                                 <div className="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center text-white"><Icon name="home" size={14}/></div>
                                 <p className="text-lg font-black tracking-[0.3em] uppercase text-slate-900">TOTODESIGN INTERIOR</p>
