@@ -24,28 +24,41 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 부드러운 스크롤 및 커스텀 스크롤바 */
+        /* 부드러운 스크롤 */
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-        /* 입력 필드 포커스 효과 */
-        .input-focus-effect {
-            transition: all 0.2s ease;
-        }
+        /* 입력 필드 효과 */
         .input-focus-effect:focus {
             box-shadow: 0 0 0 4px rgba(30, 41, 59, 0.05);
             border-color: #94a3b8;
         }
 
         @media print {
+            @page {
+                size: A4;
+                margin: 15mm 10mm; /* 기본 여백 설정 */
+            }
             .no-print { display: none !important; }
-            body { background-color: white; padding: 0; }
+            body { background-color: white; padding: 0 !important; margin: 0 !important; }
+            #root { width: 100% !important; padding: 0 !important; }
+            .max-w-6xl { max-width: 100% !important; margin: 0 !important; }
+            
+            /* 섹션 잘림 방지 */
             section, .section-break {
                 page-break-inside: avoid !important;
                 break-inside: avoid-page !important;
-                margin-bottom: 2rem;
+                margin-bottom: 30px !important;
+                display: block !important;
             }
+            
+            /* 욕실 섹션 특화 잘림 방지 */
+            .bath-container {
+                page-break-inside: avoid !important;
+                break-inside: avoid-page !important;
+            }
+
             .card {
                 box-shadow: none !important;
                 border: 1px solid #e2e8f0 !important;
@@ -64,9 +77,9 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useCallback, useMemo, useRef } = React;
+        const { useState, useEffect, useRef } = React;
 
-        // 아이콘 컴포넌트
+        // 아이콘 컴포넌트 (React-safe Lucide)
         const Icon = ({ name, size = 20, className = "" }) => {
             const containerRef = useRef(null);
             useEffect(() => {
@@ -91,7 +104,7 @@
         const WALLPAPER_TYPES = ['미선택', '일반실크', '고급실크', '프리미엄', '광폭합지'];
 
         const SectionHeader = ({ icon, title, subTitle, colorClass = "text-slate-800" }) => (
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-6">
                 <div className={`p-3 rounded-2xl bg-white shadow-sm border border-slate-100 ${colorClass}`}>
                     <Icon name={icon} size={24} />
                 </div>
@@ -113,7 +126,7 @@
             };
 
             return (
-                <div className="group bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300">
+                <div className="group bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 h-full">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-amber-500 group-hover:bg-amber-50 transition-colors">
                             <Icon name={icon} size={18} />
@@ -122,7 +135,7 @@
                     </div>
                     
                     <select 
-                        className="w-full p-3 bg-slate-50 border border-transparent rounded-xl text-xs font-bold outline-none input-focus-effect appearance-none cursor-pointer" 
+                        className="w-full p-3 bg-slate-50 border border-transparent rounded-xl text-xs font-bold outline-none cursor-pointer" 
                         value={value || '미선택'} 
                         onChange={(e) => onMainChange(e.target.value)}
                     >
@@ -415,7 +428,7 @@
 
                         {/* 헤더 섹션 */}
                         <header className="bg-white p-10 md:p-16 rounded-[4rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden section-break">
-                            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">
+                            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-8">
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-12 h-1.5 bg-amber-500 rounded-full"></div>
@@ -611,7 +624,6 @@
                             <section className="bg-white p-8 rounded-[3.5rem] shadow-sm border border-slate-100 section-break">
                                 <SectionHeader title="주방 가구 사양" subTitle="Kitchen Specification" icon="utensils" colorClass="text-teal-600" />
                                 <div className="space-y-6">
-                                    {/* 주방 레이아웃 추가 */}
                                     <div className="bg-slate-50/50 p-6 rounded-[2.5rem] space-y-4">
                                         <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest px-1">주방 레이아웃</p>
                                         <div className="flex flex-wrap gap-2">
@@ -649,7 +661,7 @@
 
                         {/* 마감재 상세 섹션 */}
                         <section className="bg-white p-10 md:p-14 rounded-[4rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative section-break">
-                            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-10">
+                            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-10">
                                 <SectionHeader title="공간별 마감재 선택" subTitle="Surface Finishing" icon="layers" colorClass="text-amber-500" />
                                 
                                 <div className="flex flex-wrap gap-2 bg-slate-100/50 p-2 rounded-[2rem] border border-slate-100 print:hidden overflow-x-auto no-scrollbar max-w-full">
@@ -662,8 +674,8 @@
                                 </div>
                             </div>
 
-                            <div className="relative p-10 bg-slate-50/50 rounded-[3.5rem] border border-slate-100">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                            <div className="relative p-8 md:p-10 bg-slate-50/50 rounded-[3.5rem] border border-slate-100">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 relative z-10">
                                     <FinishItem 
                                         type="floor" title="바닥 (Floor)" icon="monitor" value={activeFinishes.floor}
                                         options={['미선택', '장판', '강마루', '원목마루', '타일', '도장']}
@@ -691,15 +703,15 @@
                             </div>
                         </section>
 
-                        {/* 욕실 섹션 */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        {/* 욕실 섹션 (인쇄 시 한 페이지 보존 컨테이너) */}
+                        <div className="bath-container grid grid-cols-1 lg:grid-cols-2 gap-10">
                             {renderBathSection('publicBath', '공용 욕실 (Public)', 'indigo')}
                             {renderBathSection('masterBath', '부부 욕실 (Master)', 'purple')}
                         </div>
 
                         {/* 가구 및 수납 섹션 */}
                         <section className="bg-white p-10 md:p-14 rounded-[4rem] shadow-sm border border-slate-100 section-break">
-                            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-8">
+                            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-8">
                                 <SectionHeader title="가구 및 수납 계획" subTitle="Furniture & Storage" icon="box" colorClass="text-emerald-600" />
                                 <div className="flex flex-wrap gap-1.5 print:hidden">
                                     {Object.keys(formData.furnitureBySpace).map(space => (
@@ -710,8 +722,8 @@
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                                <div className="bg-emerald-50/30 p-10 rounded-[3.5rem] border border-emerald-100/50">
-                                    <div className="flex items-center gap-4 mb-10">
+                                <div className="bg-emerald-50/30 p-8 rounded-[3.5rem] border border-emerald-100/50">
+                                    <div className="flex items-center gap-4 mb-8">
                                         <div className="w-14 h-14 bg-emerald-500 rounded-3xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-emerald-100">{formData.activeSpace.slice(0,1)}</div>
                                         <div><p className="text-[11px] text-emerald-600 font-extrabold uppercase tracking-widest">Select Unit Items</p><p className="text-2xl font-black text-slate-800 tracking-tight">{formData.activeSpace} 빌트인 품목</p></div>
                                     </div>
@@ -733,7 +745,7 @@
                                 <div className="flex flex-col gap-6">
                                     <div>
                                         <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-4 px-1">가구 제작 및 시스템 상세</p>
-                                        <textarea name="systemHangerInfo" value={formData.systemHangerInfo} onChange={handleInputChange} placeholder="시스템 행거 구성, 제작 가구 도어 사양, 내부 구성 등..." className="w-full p-8 bg-slate-50 border-0 rounded-[3rem] h-64 focus:bg-white focus:ring-4 focus:ring-emerald-50 outline-none text-sm font-medium transition-all" />
+                                        <textarea name="systemHangerInfo" value={formData.systemHangerInfo} onChange={handleInputChange} placeholder="시스템 행거 구성, 제작 가구 도어 사양, 내부 구성 등..." className="w-full p-6 md:p-8 bg-slate-50 border-0 rounded-[3rem] h-64 focus:bg-white focus:ring-4 focus:ring-emerald-50 outline-none text-sm font-medium transition-all" />
                                     </div>
                                     {/* 써머리 상시 노출 영역 */}
                                     <div className="summary-box">
@@ -770,7 +782,7 @@
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
-                                <div className="bg-slate-50 p-8 rounded-[3rem] space-y-6">
+                                <div className="bg-slate-50 p-6 md:p-8 rounded-[3rem] space-y-6">
                                     <h4 className="text-xs font-black text-slate-800 flex items-center gap-2 mb-4"><Icon name="lightbulb" size={16} className="text-orange-400"/> 조명 배치</h4>
                                     {['메인등', '매립등(다운)', '간접 조명', '라인 조명', '실링팬'].map(light => {
                                         const currentSpaceData = formData.detailsBySpace[formData.activeDetailSpace] || {};
@@ -790,7 +802,7 @@
                                     })}
                                 </div>
 
-                                <div className="bg-slate-50 p-8 rounded-[3rem] space-y-6">
+                                <div className="bg-slate-50 p-6 md:p-8 rounded-[3rem] space-y-6">
                                     <h4 className="text-xs font-black text-slate-800 flex items-center gap-2 mb-4"><Icon name="cpu" size={16} className="text-teal-500"/> 전기 & IoT</h4>
                                     <div className="grid grid-cols-1 gap-3">
                                         {['분전함 교체', '단독 배선', '일괄소등', 'IoT 시스템', '콘센트 증설'].map(item => {
@@ -804,7 +816,7 @@
                                     </div>
                                 </div>
 
-                                <div className="bg-slate-50 p-8 rounded-[3rem] space-y-6">
+                                <div className="bg-slate-50 p-6 md:p-8 rounded-[3rem] space-y-6">
                                     <h4 className="text-xs font-black text-slate-800 flex items-center gap-2 mb-4"><Icon name="hammer" size={16} className="text-blue-400"/> 목공 디테일</h4>
                                     <div className="grid grid-cols-1 gap-3">
                                         {['천장 평탄화', '가벽 설치', '단열 공사', '문틀 보강', '커튼 박스', '웨인스코팅'].map(item => {
@@ -844,7 +856,7 @@
                             </div>
 
                             {/* 도어 및 몰딩 하단 통합 영역 */}
-                            <div className="bg-slate-900 text-white p-10 rounded-[3.5rem] grid grid-cols-1 md:grid-cols-3 gap-10">
+                            <div className="bg-slate-900 text-white p-8 md:p-10 rounded-[3.5rem] grid grid-cols-1 md:grid-cols-3 gap-10">
                                 {(() => {
                                     const doorData = formData.doorDetailsBySpace[formData.activeDetailSpace] || {};
                                     return (
