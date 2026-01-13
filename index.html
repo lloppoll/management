@@ -542,9 +542,11 @@
 
                                 <div className="bg-slate-50/50 p-6 rounded-[2rem] border-2 border-slate-50 font-bold">
                                     {(() => {
-                                        const activeFinishes = formData.finishesBySpace[formData.activeFinishSpace] || {};
-                                        const wallIsPaper = activeFinishes.wall === '벽지';
-                                        const ceilingIsPaper = activeFinishes.ceiling === '벽지';
+                                        const currentSpace = formData.finishesBySpace[formData.activeFinishSpace];
+                                        if (!currentSpace) return null;
+                                        
+                                        const wallIsPaper = currentSpace.wall === '벽지';
+                                        const ceilingIsPaper = currentSpace.ceiling === '벽지';
                                         
                                         if (wallIsPaper || ceilingIsPaper) {
                                             return (
@@ -559,7 +561,7 @@
                                                                         <button 
                                                                             key={paper} 
                                                                             onClick={() => handleFinishChange('wallpaperTypeWall', paper)} 
-                                                                            className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${activeFinishes.wallpaperTypeWall === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-100 hover:border-amber-200'}`}
+                                                                            className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${currentSpace.wallpaperTypeWall === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-100 hover:border-amber-200'}`}
                                                                         >
                                                                             {paper}
                                                                         </button>
@@ -575,7 +577,7 @@
                                                                         <button 
                                                                             key={paper} 
                                                                             onClick={() => handleFinishChange('wallpaperTypeCeiling', paper)} 
-                                                                            className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${activeFinishes.wallpaperTypeCeiling === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-100 hover:border-amber-200'}`}
+                                                                            className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${currentSpace.wallpaperTypeCeiling === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-100 hover:border-amber-200'}`}
                                                                         >
                                                                             {paper}
                                                                         </button>
