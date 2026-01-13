@@ -76,6 +76,16 @@
 
         const SPACES = ['전체', '거실', '안방', '주방', '현관', '발코니', '드레스룸', '욕실', '기타'];
 
+        const InfoItem = ({ icon, label, value }) => (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="text-slate-400">{icon}</div>
+                <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+                    <p className="text-sm font-black text-slate-800">{value || '---'}</p>
+                </div>
+            </div>
+        );
+
         const App = () => {
             const [formData, setFormData] = useState({
                 customerName: '',
@@ -102,12 +112,10 @@
                 kitchenCountertop: '인조대리석',
                 kitchenExtra: '',
                 activeFinishSpace: '전체',
-                // 마감재 초기화: '전체'만 기본값, 나머지는 '미선택'
+                // 마감재 초기화: 모든 공간 미선택으로 설정
                 finishesBySpace: SPACES.reduce((acc, s) => ({
                     ...acc, 
-                    [s]: s === '전체' 
-                        ? { floor: '강마루', floorOption: '표준', wall: '실크벽지', wallpaperType: '일반실크(베스트)', ceiling: '실크벽지' }
-                        : { floor: '미선택', floorOption: '미선택', wall: '미선택', wallpaperType: '미선택', ceiling: '미선택' }
+                    [s]: { floor: '미선택', floorOption: '미선택', wall: '미선택', wallpaperType: '미선택', ceiling: '미선택' }
                 }), {}),
                 publicBath: {
                     tub: '미선택', partition: '미선택', trench: '일반육가', cabinet: '미선택',
@@ -353,12 +361,22 @@
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 font-bold">
-                                {[{ label: '고객명', name: 'customerName', icon: <User size={18}/> }, { label: '연락처', name: 'contact', icon: <Phone size={18}/> }, { label: '현장명', name: 'siteName', icon: <MapPin size={18}/> }, { label: '공사예정일', name: 'workDate', icon: <Calendar size={18}/>, type: 'date' }, { label: '예산금액', name: 'budget', icon: <Wallet size={18}/> }, { label: '가족인원', name: 'familyCount', icon: <Users size={18}/>, type: 'number' }].map((field) => (
+                                {[{ label: '고객명', name: 'customerName', icon: <User size={18}/> }, { label: '연락처', name: 'contact', icon: <Phone size={18}/> }, { label: '현장명', name: 'siteName', icon: <MapPin size={18}/> }, { label: '공사예정일', name: 'workDate', icon: <Calendar size={18}/>, type: 'date' }, { label: '예산금액', name: 'budget', icon: <Wallet size={18}/>, type: 'number' }, { label: '가족인원', name: 'familyCount', icon: <Users size={18}/>, type: 'number' }].map((field) => (
                                     <div key={field.name} className="relative group">
                                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors">{field.icon}</div>
-                                        <input type={field.type || 'text'} name={field.name} value={formData[field.name]} onChange={handleInputChange} placeholder={field.label} className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all font-bold font-sans" />
+                                        <input type={field.type || 'text'} name={field.name} value={formData[field.name]} onChange={handleInputChange} placeholder={field.label + (field.name === 'budget' ? ' (만원)' : '')} className="w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all font-bold font-sans" />
+                                        {field.name === 'budget' && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">만원</span>}
                                     </div>
                                 ))}
+                            </div>
+
+                            <div className="hidden print:grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
+                                <InfoItem icon={<User size={16} />} label="고객명" value={formData.customerName} />
+                                <InfoItem icon={<Phone size={16} />} label="연락처" value={formData.contact} />
+                                <InfoItem icon={<MapPin size={16} />} label="현장명" value={formData.siteName} />
+                                <InfoItem icon={<Wallet size={16} />} label="예산금액" value={formData.budget ? `${formData.budget} 만원` : ''} />
+                                <InfoItem icon={<Calendar size={16} />} label="공사 예정일" value={formData.workDate} />
+                                <InfoItem icon={<Users size={16} />} label="가족 인원" value={formData.familyCount} />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 font-bold">
@@ -498,24 +516,24 @@
                                         <div>
                                             <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 font-sans font-bold font-sans font-bold">Wall 벽체 마감</label>
                                             <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={formData.finishesBySpace[formData.activeFinishSpace].wall} onChange={(e) => handleFinishChange('wall', e.target.value)}>
-                                                {['미선택', '실크벽지', '도장', '필름', '디자인월'].map(i => <option key={i} value={i}>{i}</option>)}
+                                                {['미선택', '벽지', '도장', '필름', '디자인월'].map(i => <option key={i} value={i}>{i}</option>)}
                                             </select>
                                         </div>
                                         <div>
                                             <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 font-sans font-bold font-sans font-bold">Ceiling 천장 마감</label>
                                             <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-bold" value={formData.finishesBySpace[formData.activeFinishSpace].ceiling} onChange={(e) => handleFinishChange('ceiling', e.target.value)}>
-                                                {['미선택', '실크벽지', '도장', '필름'].map(i => <option key={i} value={i}>{i}</option>)}
+                                                {['미선택', '벽지', '도장', '필름'].map(i => <option key={i} value={i}>{i}</option>)}
                                             </select>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="bg-slate-50/50 p-6 rounded-[2rem] border-2 border-slate-50 font-bold">
-                                    {(formData.finishesBySpace[formData.activeFinishSpace].wall === '실크벽지' || formData.finishesBySpace[formData.activeFinishSpace].ceiling === '실크벽지') ? (
+                                    {(formData.finishesBySpace[formData.activeFinishSpace].wall === '벽지' || formData.finishesBySpace[formData.activeFinishSpace].ceiling === '벽지') ? (
                                         <div className="space-y-4">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 font-bold font-sans">Wallpaper Detail 도배지 종류</p>
                                             <div className="grid grid-cols-2 gap-2">
-                                                {['일반실크(베스트)', '고급실크(디아망등)', '프리미엄(포티스)', '광폭합지'].map(paper => (
+                                                {['미선택', '일반실크(베스트)', '고급실크(디아망등)', '프리미엄(포티스)', '광폭합지'].map(paper => (
                                                     <button key={paper} onClick={() => handleFinishChange('wallpaperType', paper)} className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${formData.finishesBySpace[formData.activeFinishSpace].wallpaperType === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md font-sans font-bold' : 'bg-white text-slate-400 border-slate-100 font-bold'}`}>{paper}</button>
                                                 ))}
                                             </div>
@@ -649,7 +667,7 @@
                                         </div>
 
                                         <div>
-                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold font-sans font-bold font-sans font-bold"><Cpu size={16} className="text-teal-500"/> 공간 전기 & 제어</h4>
+                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold font-sans font-bold"><Cpu size={16} className="text-teal-500"/> 공간 전기 & 제어</h4>
                                             <div className="space-y-3 font-sans font-bold font-sans font-bold font-bold">
                                                 {['분전함 교체', '단독 배선', '일괄소등 스위치', 'IoT 시스템 적용'].map(item => (
                                                     <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${formData.detailsBySpace[formData.activeDetailSpace].electrical?.includes(item) ? 'bg-teal-500 border-teal-500 text-white shadow-lg font-bold' : 'bg-white border-slate-100 text-slate-400 hover:border-teal-100 font-sans'}`}><input type="checkbox" className="hidden" checked={formData.detailsBySpace[formData.activeDetailSpace].electrical?.includes(item)} onChange={() => toggleDetailForSpace('electrical', item)} /><span className="text-[11px] font-black font-sans font-bold">{item}</span></label>
