@@ -185,7 +185,7 @@
                 windowBrand: '', 
                 extensions: [],
                 kitchenAppliances: [],
-                kitchenType: '일반 구조',
+                kitchenType: [],
                 kitchenHardware: '표준', 
                 kitchenCountertop: '인조대리석',
                 kitchenExtra: '',
@@ -550,14 +550,31 @@
                                 </div>
                                 <div className="font-sans">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 mb-4">Layout & HW</p>
-                                    <div className="grid grid-cols-2 gap-2 mb-3">
-                                        {['일반형', 'ㄱ자형', '아일랜드', '대면형'].map(type => (
-                                            <button key={type} onClick={() => setFormData(p => ({...p, kitchenType: type}))} className={`py-2 rounded-lg text-[10px] font-black border transition-all font-sans font-bold ${formData.kitchenType === type ? 'bg-teal-500 text-white border-teal-500 shadow-md' : 'bg-slate-50 text-slate-400 border-transparent'}`}>{type}</button>
-                                        ))}
+                                    <div className="mb-4">
+                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider mb-2">Layout (레이아웃)</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {['일반형', 'ㄱ자형', '아일랜드', '대면형'].map(type => (
+                                                <button 
+                                                    key={type} 
+                                                    onClick={() => toggleArrayItem('kitchenType', type)} 
+                                                    className={`py-2.5 rounded-lg text-[10px] font-black border-2 transition-all font-sans font-bold ${
+                                                        formData.kitchenType.includes(type) 
+                                                            ? 'bg-teal-500 text-white border-teal-500 shadow-md' 
+                                                            : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-teal-300'
+                                                    }`}
+                                                >
+                                                    {type}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-sans font-bold" value={formData.kitchenHardware} onChange={(e) => setFormData(p => ({...p, kitchenHardware: e.target.value}))}>
-                                        <option value="표준">표준 사양 (K-HW)</option><option value="고급">고급 사양 (Blum)</option>
-                                    </select>
+                                    <div>
+                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider mb-2">하드웨어</p>
+                                        <select className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none font-sans font-bold" value={formData.kitchenHardware} onChange={(e) => setFormData(p => ({...p, kitchenHardware: e.target.value}))}>
+                                            <option value="표준">표준 사양(국산)</option>
+                                            <option value="고급">고급 사양(Blum)</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div className="font-sans">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 mb-4">Countertop 상판</p>
