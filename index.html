@@ -23,6 +23,14 @@
             .no-print { display: none !important; }
             body { background-color: white; padding: 0; }
             .print-padding { padding: 0 !important; }
+            section, .section-break {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .max-w-6xl > * {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
         }
     </style>
 </head>
@@ -167,13 +175,16 @@
 
             const handleFinishChange = (key, value) => {
                 const space = formData.activeFinishSpace;
-                setFormData(prev => ({
-                    ...prev,
-                    finishesBySpace: {
-                        ...prev.finishesBySpace,
-                        [space]: { ...prev.finishesBySpace[space], [key]: value }
-                    }
-                }));
+                setFormData(prev => {
+                    const currentSpace = prev.finishesBySpace[space] || {};
+                    return {
+                        ...prev,
+                        finishesBySpace: {
+                            ...prev.finishesBySpace,
+                            [space]: { ...currentSpace, [key]: value }
+                        }
+                    };
+                });
             };
 
             const toggleFurnitureForSpace = (item) => {
@@ -348,7 +359,7 @@
                             <button onClick={handlePrint} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-2 rounded-xl hover:bg-slate-800 shadow-lg font-bold"><Icon name="printer" size={18} /><span>인쇄 / PDF 저장</span></button>
                         </div>
 
-                        <header className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
+                        <header className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 section-break">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 font-bold">
                                 <div>
                                     <h1 className="text-3xl font-black tracking-tight text-slate-900">토토디자인 미팅 시트</h1>
@@ -413,7 +424,7 @@
                             </div>
                         </header>
 
-                        <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-l-8 border-slate-900 font-bold">
+                        <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-l-8 border-slate-900 font-bold section-break">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 font-sans font-bold">
                                 <h3 className="font-black text-slate-900 text-xl flex items-center gap-2"><Trash2 size={24} /> 철거 및 공사 범위</h3>
                                 <div className="flex gap-2">
@@ -423,7 +434,7 @@
                             <textarea name="demoNotes" value={formData.demoNotes} onChange={handleInputChange} placeholder="구체적인 철거 범위 기입" className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] h-32 focus:bg-white outline-none text-sm font-medium font-sans" />
                         </section>
 
-                        <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-l-8 border-cyan-400 font-bold">
+                        <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-l-8 border-cyan-400 font-bold section-break">
                             <h3 className="font-black text-cyan-600 mb-6 flex items-center gap-2 text-xl tracking-tight"><Snowflake size={24} /> 냉방 가전 계획</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-sans">
                                 <div className="space-y-4">
@@ -445,7 +456,7 @@
                             </div>
                         </section>
 
-                        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-l-8 border-teal-500 font-bold">
+                        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-l-8 border-teal-500 font-bold section-break">
                             <h3 className="font-black text-teal-600 mb-6 flex items-center gap-2 text-xl tracking-tight"><Utensils size={24} /> 주방 사양</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                 <div className="font-sans">
@@ -477,7 +488,7 @@
                             </div>
                         </div>
 
-                        <section className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border-l-8 border-amber-500 font-bold">
+                        <section className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border-l-8 border-amber-500 font-bold section-break">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 font-sans font-bold">
                                 <h3 className="font-black text-amber-600 text-xl flex items-center gap-2"><Layers size={24} /> 마감재 사양</h3>
                                 <div className="flex flex-wrap gap-1.5 print:hidden font-bold">
@@ -530,45 +541,70 @@
                                 </div>
 
                                 <div className="bg-slate-50/50 p-6 rounded-[2rem] border-2 border-slate-50 font-bold">
-                                    {(formData.finishesBySpace[formData.activeFinishSpace].wall === '벽지' || formData.finishesBySpace[formData.activeFinishSpace].ceiling === '벽지') ? (
-                                        <div className="space-y-6">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 font-bold font-sans">Wallpaper Detail 도배지 종류</p>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                {formData.finishesBySpace[formData.activeFinishSpace].wall === '벽지' && (
-                                                    <div className="space-y-2">
-                                                        <p className="text-[11px] font-black text-amber-700">벽체 도배지</p>
-                                                        <div className="grid grid-cols-1 gap-2">
-                                                            {['미선택', '일반실크(베스트)', '고급실크(디아망등)', '프리미엄(포티스)', '광폭합지'].map(paper => (
-                                                                <button key={paper} onClick={() => handleFinishChange('wallpaperTypeWall', paper)} className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${formData.finishesBySpace[formData.activeFinishSpace].wallpaperTypeWall === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}>{paper}</button>
-                                                            ))}
-                                                        </div>
+                                    {(() => {
+                                        const activeFinishes = formData.finishesBySpace[formData.activeFinishSpace] || {};
+                                        const wallIsPaper = activeFinishes.wall === '벽지';
+                                        const ceilingIsPaper = activeFinishes.ceiling === '벽지';
+                                        
+                                        if (wallIsPaper || ceilingIsPaper) {
+                                            return (
+                                                <div className="space-y-6">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 font-bold font-sans">Wallpaper Detail 도배지 종류</p>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        {wallIsPaper && (
+                                                            <div className="space-y-2">
+                                                                <p className="text-[11px] font-black text-amber-700">벽체 도배지</p>
+                                                                <div className="grid grid-cols-1 gap-2">
+                                                                    {['미선택', '일반실크(베스트)', '고급실크(디아망등)', '프리미엄(포티스)', '광폭합지'].map(paper => (
+                                                                        <button 
+                                                                            key={paper} 
+                                                                            onClick={() => handleFinishChange('wallpaperTypeWall', paper)} 
+                                                                            className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${activeFinishes.wallpaperTypeWall === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-100 hover:border-amber-200'}`}
+                                                                        >
+                                                                            {paper}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {ceilingIsPaper && (
+                                                            <div className="space-y-2">
+                                                                <p className="text-[11px] font-black text-amber-700">천장 도배지</p>
+                                                                <div className="grid grid-cols-1 gap-2">
+                                                                    {['미선택', '일반실크(베스트)', '고급실크(디아망등)', '프리미엄(포티스)', '광폭합지'].map(paper => (
+                                                                        <button 
+                                                                            key={paper} 
+                                                                            onClick={() => handleFinishChange('wallpaperTypeCeiling', paper)} 
+                                                                            className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${activeFinishes.wallpaperTypeCeiling === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-100 hover:border-amber-200'}`}
+                                                                        >
+                                                                            {paper}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                )}
-                                                {formData.finishesBySpace[formData.activeFinishSpace].ceiling === '벽지' && (
-                                                    <div className="space-y-2">
-                                                        <p className="text-[11px] font-black text-amber-700">천장 도배지</p>
-                                                        <div className="grid grid-cols-1 gap-2">
-                                                            {['미선택', '일반실크(베스트)', '고급실크(디아망등)', '프리미엄(포티스)', '광폭합지'].map(paper => (
-                                                                <button key={paper} onClick={() => handleFinishChange('wallpaperTypeCeiling', paper)} className={`py-3 rounded-xl text-[11px] font-black border transition-all font-sans font-bold ${formData.finishesBySpace[formData.activeFinishSpace].wallpaperTypeCeiling === paper ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}>{paper}</button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="h-full flex flex-col items-center justify-center text-slate-300 font-bold"><CheckSquare size={40} className="mb-2 opacity-20"/><p className="text-xs">상세 옵션 없음</p></div>
-                                    )}
+                                                </div>
+                                            );
+                                        } else {
+                                            return (
+                                                <div className="h-full flex flex-col items-center justify-center text-slate-300 font-bold">
+                                                    <CheckSquare size={40} className="mb-2 opacity-20"/>
+                                                    <p className="text-xs">상세 옵션 없음</p>
+                                                </div>
+                                            );
+                                        }
+                                    })()}
                                 </div>
                             </div>
                         </section>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-bold">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-bold section-break">
                             {renderBathSection('publicBath', '공용 욕실 (Public)', 'bg-indigo-50/40', 'border-indigo-100', 'text-indigo-700')}
                             {renderBathSection('masterBath', '부부 욕실 (Master)', 'bg-purple-50/40', 'border-purple-100', 'text-purple-700')}
                         </div>
 
-                        <section className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border-l-8 border-emerald-500 font-bold">
+                        <section className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border-l-8 border-emerald-500 font-bold section-break">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                                 <h3 className="font-black text-emerald-600 text-xl flex items-center gap-2"><Box size={24} /> 가구 및 수납 계획</h3>
                                 <div className="flex flex-wrap gap-1.5 print:hidden">
@@ -606,7 +642,7 @@
                             </div>
                         </section>
 
-                        <section className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border-t-8 border-rose-500 font-bold">
+                        <section className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border-t-8 border-rose-500 font-bold section-break">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
                                 <h3 className="font-black text-rose-600 text-xl flex items-center gap-2"><Zap size={24} /> 전기 및 목공 디테일</h3>
                                 <div className="flex flex-wrap gap-1.5 print:hidden">
