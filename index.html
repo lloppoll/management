@@ -342,6 +342,19 @@
                 setFormData(prev => ({ ...prev, [type]: { ...prev[type], [key]: value } }));
             };
 
+            const handleDoorDetailChange = (key, value) => {
+                setFormData(prev => ({
+                    ...prev,
+                    doorDetailsBySpace: {
+                        ...prev.doorDetailsBySpace,
+                        [prev.activeDetailSpace]: { 
+                            ...(prev.doorDetailsBySpace[prev.activeDetailSpace] || {}), 
+                            [key]: value 
+                        }
+                    }
+                }));
+            };
+
             const handlePrint = () => window.print();
             const resetForm = () => { if (window.confirm("시트를 초기화하시겠습니까?")) window.location.reload(); };
 
@@ -993,34 +1006,16 @@
 
                         <section className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border-t-8 border-rose-500 font-bold section-break">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-                                <h3 className="font-black text-rose-600 text-xl flex items-center gap-2"><Zap size={24} /> 전기 및 목공 디테일</h3>
+                                <h3 className="font-black text-rose-600 text-xl flex items-center gap-2"><Icon name="zap" size={24} /> 전기 및 목공 디테일</h3>
                                 <div className="flex flex-wrap gap-1.5 bg-slate-50 p-2 rounded-[1.5rem] border border-slate-100 print:hidden">
                                     {SPACES.map(space => {
-                                        const detail = formData.detailsBySpace[space] || { lighting: [], electrical: [], carpentry: [], lightingLocations: {} };
+                                        const detail = formData.detailsBySpace[space] || { lighting: [], electrical: [], carpentry: [] };
                                         const count = (detail.lighting?.length || 0) + (detail.electrical?.length || 0) + (detail.carpentry?.length || 0);
                                         return (
                                             <button 
                                                 key={space} 
                                                 type="button"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    try {
-                                                        setFormData(p => {
-                                                            const currentSpace = p.detailsBySpace[space] || { lighting: [], electrical: [], carpentry: [], lightingLocations: {} };
-                                                            return {
-                                                                ...p,
-                                                                activeDetailSpace: space,
-                                                                detailsBySpace: {
-                                                                    ...p.detailsBySpace,
-                                                                    [space]: currentSpace
-                                                                }
-                                                            };
-                                                        });
-                                                    } catch (error) {
-                                                        console.error('Error changing activeDetailSpace:', error);
-                                                    }
-                                                }} 
+                                                onClick={() => setFormData(p => ({ ...p, activeDetailSpace: space }))}
                                                 className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border ${formData.activeDetailSpace === space ? 'bg-rose-500 text-white border-rose-500 shadow-md' : 'bg-white text-slate-400 border-slate-200 hover:border-rose-200'}`}
                                             >
                                                 {space} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
@@ -1030,223 +1025,124 @@
                                 </div>
                             </div>
 
-                            {(() => {
-                                const currentDetails = formData.detailsBySpace[formData.activeDetailSpace] || {
-                                    lighting: [],
-                                    electrical: [],
-                                    carpentry: [],
-                                    lightingLocations: {}
-                                };
-                                
-                                const currentDoorDetails = formData.doorDetailsBySpace[formData.activeDetailSpace] || {
-                                    doorStyle: '미선택',
-                                    doorHandle: '일반',
-                                    moldingType: '미선택',
-                                    skirtingType: '미선택',
-                                    entranceDoor: '미선택'
-                                };
-
-                                const handleDoorDetailChange = (key, value) => {
-                                    setFormData(prev => {
-                                        const currentSpace = prev.doorDetailsBySpace[prev.activeDetailSpace] || {
-                                            doorStyle: '미선택',
-                                            doorHandle: '일반',
-                                            moldingType: '미선택',
-                                            skirtingType: '미선택',
-                                            entranceDoor: '미선택'
-                                        };
-                                        
-                                        return {
-                                            ...prev,
-                                            doorDetailsBySpace: {
-                                                ...prev.doorDetailsBySpace,
-                                                [prev.activeDetailSpace]: {
-                                                    ...currentSpace,
-                                                    [key]: value
-                                                }
-                                            }
-                                        };
-                                    });
-                                };
-
-                                return (
-                                    <div className="bg-slate-50/50 p-6 md:p-8 rounded-[2.5rem] border-2 border-slate-100 relative shadow-sm mb-10 font-bold">
-                                    <div className="absolute top-6 right-8 opacity-10 flex items-center gap-2 text-rose-300 font-bold"><Layout size={40}/><span className="text-2xl font-black uppercase font-sans">{formData.activeDetailSpace}</span></div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 relative">
-                                        <div>
-                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Lightbulb size={16} className="text-orange-400"/> 공간 조명</h4>
-                                            <div className="space-y-3.5 font-bold">
-                                                {['메인등', '매립등(다운)', '간접 조명', '라인 조명', '실링팬'].map(light => (
-                                                    <div key={light} className="flex flex-col gap-2 font-bold">
-                                                        <label className="flex items-center gap-3 cursor-pointer group font-bold">
-                                                            <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${(currentDetails.lighting || []).includes(light) ? 'bg-orange-400 border-orange-400 shadow-md' : 'bg-white border-slate-200'}`}>
-                                                                {(currentDetails.lighting || []).includes(light) && <Zap size={10} className="text-white fill-current"/>}
+                            <div className="bg-slate-50/50 p-6 md:p-8 rounded-[2.5rem] border-2 border-slate-100 relative shadow-sm mb-10">
+                                <div className="absolute top-6 right-8 opacity-10 flex items-center gap-2 text-rose-300 font-bold"><Icon name="layout" size={40}/><span className="text-2xl font-black uppercase">{formData.activeDetailSpace}</span></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 relative">
+                                    {/* 조명 */}
+                                    <div>
+                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2"><Icon name="lightbulb" size={16} className="text-orange-400"/> 공간 조명</h4>
+                                        <div className="space-y-3.5">
+                                            {['메인등', '매립등(다운)', '간접 조명', '라인 조명', '실링팬'].map(light => {
+                                                const currentLighting = formData.detailsBySpace[formData.activeDetailSpace]?.lighting || [];
+                                                const isChecked = currentLighting.includes(light);
+                                                return (
+                                                    <div key={light} className="flex flex-col gap-2">
+                                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                                            <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${isChecked ? 'bg-orange-400 border-orange-400' : 'bg-white border-slate-200'}`}>
+                                                                {isChecked && <Icon name="zap" size={10} className="text-white" />}
                                                             </div>
-                                                            <input type="checkbox" className="hidden" checked={(currentDetails.lighting || []).includes(light)} onChange={() => toggleDetailForSpace('lighting', light)}/>
-                                                            <span className={`text-[12px] font-black ${(currentDetails.lighting || []).includes(light) ? 'text-slate-800' : 'text-slate-400'}`}>{light}</span>
+                                                            <input type="checkbox" className="hidden" checked={isChecked} onChange={() => toggleDetailForSpace('lighting', light)}/>
+                                                            <span className={`text-[12px] font-black ${isChecked ? 'text-slate-800' : 'text-slate-400'}`}>{light}</span>
                                                         </label>
-                                                        {(currentDetails.lighting || []).includes(light) && (
+                                                        {isChecked && (
                                                             <div className="pl-8">
-                                                                <input type="text" placeholder="위치 상세" className="w-full p-2 text-[10px] bg-white border-b-2 border-orange-100 focus:border-orange-300 outline-none font-bold rounded-t-lg transition-all" value={(currentDetails.lightingLocations || {})[light] || ''} onChange={(e) => handleDetailLocationChange(light, e.target.value)} />
+                                                                <input type="text" placeholder="위치 상세" className="w-full p-2 text-[10px] bg-white border-b-2 border-orange-100 outline-none font-bold" value={formData.detailsBySpace[formData.activeDetailSpace]?.lightingLocations?.[light] || ''} onChange={(e) => handleDetailLocationChange(light, e.target.value)} />
                                                             </div>
                                                         )}
                                                     </div>
-                                                ))}
-                                            </div>
+                                                );
+                                            })}
                                         </div>
+                                    </div>
 
-                                        <div>
-                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Cpu size={16} className="text-teal-500"/> 공간 전기 & 제어</h4>
-                                            <div className="space-y-3 font-bold">
-                                                {['분전함 교체', '단독 배선', '일괄소등 스위치', 'IoT 시스템 적용'].map(item => (
-                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${(currentDetails.electrical || []).includes(item) ? 'bg-teal-500 border-teal-500 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-teal-100'}`}>
-                                                        <input type="checkbox" className="hidden" checked={(currentDetails.electrical || []).includes(item)} onChange={() => toggleDetailForSpace('electrical', item)} />
-                                                        <span className="text-[11px] font-black">{item}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
+                                    {/* 전기 */}
+                                    <div>
+                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2"><Icon name="cpu" size={16} className="text-teal-500"/> 공간 전기</h4>
+                                        <div className="space-y-3">
+                                            {['분전함 교체', '단독 배선', '일괄소등 스위치', 'IoT 적용'].map(item => (
+                                                <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${(formData.detailsBySpace[formData.activeDetailSpace]?.electrical || []).includes(item) ? 'bg-teal-500 border-teal-500 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}>
+                                                    <input type="checkbox" className="hidden" checked={(formData.detailsBySpace[formData.activeDetailSpace]?.electrical || []).includes(item)} onChange={() => toggleDetailForSpace('electrical', item)} />
+                                                    <span className="text-[11px] font-black">{item}</span>
+                                                </label>
+                                            ))}
                                         </div>
+                                    </div>
 
-                                        <div>
-                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Hammer size={16} className="text-blue-400"/> 공간 목공 & 특수</h4>
-                                            <div className="grid grid-cols-1 gap-2.5 font-bold">
-                                                {['천장 평탄화', '가벽설치', '단열공사', '문틀보강', '커튼박스', '웨인스코팅', '아치형 개구부'].map(item => (
-                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${(currentDetails.carpentry || []).includes(item) ? 'bg-blue-500 border-blue-500 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-100'}`}><input type="checkbox" className="hidden" checked={(currentDetails.carpentry || []).includes(item)} onChange={() => toggleDetailForSpace('carpentry', item)} /><span className="text-[11px] font-black">{item}</span></label>
-                                                ))}
-                                            </div>
+                                    {/* 목공 */}
+                                    <div>
+                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2"><Icon name="hammer" size={16} className="text-blue-400"/> 공간 목공</h4>
+                                        <div className="grid grid-cols-1 gap-2.5">
+                                            {['천장 평탄화', '가벽설치', '단열공사', '문틀보강', '아치형 개구부'].map(item => (
+                                                <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${(formData.detailsBySpace[formData.activeDetailSpace]?.carpentry || []).includes(item) ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white border-slate-100 text-slate-400'}`}><input type="checkbox" className="hidden" checked={(formData.detailsBySpace[formData.activeDetailSpace]?.carpentry || []).includes(item)} onChange={() => toggleDetailForSpace('carpentry', item)} /><span className="text-[11px] font-black">{item}</span></label>
+                                            ))}
                                         </div>
+                                    </div>
 
-                                        <div>
-                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Box size={16} className="text-purple-400"/> 방문 및 문선</h4>
-                                            <div className="space-y-4 font-bold">
-                                                <div>
-                                                    <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">문선 선택</label>
-                                                    <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-purple-400 transition-colors" value={currentDoorDetails.doorStyle} onChange={(e) => handleDoorDetailChange('doorStyle', e.target.value)}>
-                                                        <option value="미선택">미선택</option>
-                                                        <option value="일반문">일반문</option>
-                                                        <option value="9mm 문선">9mm 문선</option>
-                                                        <option value="히든 도어">히든 도어</option>
-                                                        <option value="무문선">무문선</option>
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">도어손잡이</label>
-                                                    <div className="flex gap-2">
-                                                        {['일반', '고급(도무스)'].map(h => (
-                                                            <button key={h} onClick={() => handleDoorDetailChange('doorHandle', h)} className={`flex-1 py-2.5 text-[10px] font-black border-2 rounded-xl transition-all ${currentDoorDetails.doorHandle === h ? 'bg-purple-500 text-white border-purple-500 shadow-sm' : 'bg-white text-slate-400 border-slate-100 hover:border-purple-200'}`}>
-                                                                {h}
-                                                            </button>
-                                                        ))}
-                                                    </div>
+                                    {/* 방문/문선 */}
+                                    <div>
+                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2"><Icon name="box" size={16} className="text-purple-400"/> 방문 및 문선</h4>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">문선 선택</label>
+                                                <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black" value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.doorStyle || '미선택'} onChange={(e) => handleDoorDetailChange('doorStyle', e.target.value)}>
+                                                    <option value="미선택">미선택</option><option value="일반문">일반문</option><option value="9mm 문선">9mm 문선</option><option value="히든 도어">히든 도어</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">도어손잡이</label>
+                                                <div className="flex gap-2">
+                                                    {['일반', '고급'].map(h => (
+                                                        <button key={h} onClick={() => handleDoorDetailChange('doorHandle', h)} className={`flex-1 py-2 text-[10px] font-black border-2 rounded-xl transition-all ${formData.doorDetailsBySpace[formData.activeDetailSpace]?.doorHandle === h ? 'bg-purple-500 text-white border-purple-500' : 'bg-white text-slate-400 border-slate-100'}`}>{h}</button>
+                                                    ))}
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <div>
-                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Box size={16} className="text-rose-400"/> 현관 중문</h4>
-                                            <div className="font-bold">
-                                                <select className="w-full p-3 bg-white border-2 border-rose-100 rounded-xl outline-none text-xs font-black text-rose-700 focus:border-rose-400 transition-colors" value={currentDoorDetails.entranceDoor} onChange={(e) => handleDoorDetailChange('entranceDoor', e.target.value)}>
-                                                    <option value="미선택">미선택</option>
-                                                    <option value="초슬림 3연동">초슬림 3연동</option>
-                                                    <option value="원슬라이딩">원슬라이딩</option>
-                                                    <option value="비대칭 여닫이">비대칭 여닫이</option>
-                                                    <option value="스윙도어">스윙도어</option>
+                                    {/* 몰딩/걸레받이 */}
+                                    <div>
+                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2"><Icon name="scissors" size={16} className="text-amber-400"/> 목공 마감</h4>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">몰딩</label>
+                                                <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black" value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.moldingType || '미선택'} onChange={(e) => handleDoorDetailChange('moldingType', e.target.value)}>
+                                                    <option value="미선택">미선택</option><option value="무몰딩">무몰딩</option><option value="일반몰딩">일반몰딩</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">현관 중문</label>
+                                                <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black" value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.entranceDoor || '미선택'} onChange={(e) => handleDoorDetailChange('entranceDoor', e.target.value)}>
+                                                    <option value="미선택">미선택</option><option value="3연동">3연동</option><option value="원슬라이딩">원슬라이딩</option><option value="여닫이">여닫이</option>
                                                 </select>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                                        <div>
-                                            <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Scissors size={16} className="text-amber-400"/> 목공 마감</h4>
-                                            <div className="space-y-4 font-bold">
-                                                <div>
-                                                    <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">몰딩 선택</label>
-                                                    <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-amber-400 transition-colors" value={currentDoorDetails.moldingType} onChange={(e) => handleDoorDetailChange('moldingType', e.target.value)}>
-                                                        <option value="미선택">미선택</option>
-                                                        <option value="무몰딩">무몰딩</option>
-                                                        <option value="마이너스몰딩">마이너스몰딩</option>
-                                                        <option value="일반몰딩">일반몰딩</option>
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">걸레받이 선택</label>
-                                                    <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-amber-400 transition-colors" value={currentDoorDetails.skirtingType} onChange={(e) => handleDoorDetailChange('skirtingType', e.target.value)}>
-                                                        <option value="미선택">미선택</option>
-                                                        <option value="무걸레받이">무걸레받이</option>
-                                                        <option value="마이너스 걸레받이">마이너스 걸레받이</option>
-                                                        <option value="일반 걸레받이">일반 걸레받이</option>
-                                                    </select>
+                            {/* 전기 및 목공 요약 섹션 */}
+                            <div className="mt-8 pt-6 border-t-2 border-rose-200 bg-rose-50/30 rounded-2xl p-6">
+                                <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-4 flex items-center gap-2"><Icon name="file-text" size={14} /> 전기 및 목공 디테일 요약</p>
+                                <div className="space-y-4">
+                                    {Object.entries(formData.detailsBySpace).map(([space, data]) => {
+                                        const doorData = formData.doorDetailsBySpace[space] || {};
+                                        const hasContent = (data.lighting?.length || 0) > 0 || (data.electrical?.length || 0) > 0 || (data.carpentry?.length || 0) > 0 || (doorData.doorStyle && doorData.doorStyle !== '미선택') || (doorData.entranceDoor && doorData.entranceDoor !== '미선택');
+                                        if (!hasContent) return null;
+                                        return (
+                                            <div key={space} className="border-b border-rose-100 pb-3 last:border-0">
+                                                <div className="font-black text-rose-600 text-xs mb-2">[{space}]</div>
+                                                <div className="space-y-1 text-xs text-slate-700 ml-2">
+                                                    {data.lighting?.length > 0 && <div><span className="font-bold text-orange-500">[조명]</span> {data.lighting.map(l => `${l}${data.lightingLocations?.[l] ? `(${data.lightingLocations[l]})` : ''}`).join(', ')}</div>}
+                                                    {data.electrical?.length > 0 && <div><span className="font-bold text-teal-600">[전기]</span> {data.electrical.join(', ')}</div>}
+                                                    {data.carpentry?.length > 0 && <div><span className="font-bold text-blue-500">[목공]</span> {data.carpentry.join(', ')}</div>}
+                                                    {doorData.doorStyle && doorData.doorStyle !== '미선택' && <div><span className="font-bold text-purple-500">[문선]</span> {doorData.doorStyle}</div>}
+                                                    {doorData.entranceDoor && doorData.entranceDoor !== '미선택' && <div><span className="font-bold text-rose-500">[현관중문]</span> {doorData.entranceDoor}</div>}
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-
-                                    {/* 전기 및 목공 디테일 요약 */}
-                                    <div className="mt-8 pt-6 border-t-2 border-rose-200 bg-rose-50/30 rounded-2xl p-6">
-                                        <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <Icon name="file-text" size={14} />
-                                            전기 및 목공 디테일 요약 (Summary)
-                                        </p>
-                                        <div className="space-y-4">
-                                            {Object.entries(formData.detailsBySpace).map(([space, data]) => {
-                                                const doorData = formData.doorDetailsBySpace[space] || {};
-                                                const hasContent = (data.lighting?.length || 0) > 0 || 
-                                                                  (data.electrical?.length || 0) > 0 || 
-                                                                  (data.carpentry?.length || 0) > 0 ||
-                                                                  (doorData.doorStyle && doorData.doorStyle !== '미선택') ||
-                                                                  (doorData.doorHandle && doorData.doorHandle !== '일반') ||
-                                                                  (doorData.moldingType && doorData.moldingType !== '미선택') ||
-                                                                  (doorData.skirtingType && doorData.skirtingType !== '미선택') ||
-                                                                  (doorData.entranceDoor && doorData.entranceDoor !== '미선택');
-                                                
-                                                if (!hasContent) return null;
-                                                
-                                                return (
-                                                    <div key={space} className="border-b border-rose-100 pb-3 last:border-0">
-                                                        <div className="font-black text-rose-600 text-xs mb-2">[{space}]</div>
-                                                        <div className="space-y-1.5 text-xs text-slate-700 ml-2">
-                                                            {data.lighting && data.lighting.length > 0 && (
-                                                                <div><span className="font-bold text-orange-500">[조명]</span> {data.lighting.map(l => `${l}${data.lightingLocations?.[l] ? `(${data.lightingLocations[l]})` : ''}`).join(', ')}</div>
-                                                            )}
-                                                            {data.electrical && data.electrical.length > 0 && (
-                                                                <div><span className="font-bold text-teal-600">[전기]</span> {data.electrical.join(', ')}</div>
-                                                            )}
-                                                            {data.carpentry && data.carpentry.length > 0 && (
-                                                                <div><span className="font-bold text-blue-500">[목공]</span> {data.carpentry.join(', ')}</div>
-                                                            )}
-                                                            {doorData.doorStyle && doorData.doorStyle !== '미선택' && (
-                                                                <div><span className="font-bold text-purple-500">[문선]</span> {doorData.doorStyle}{doorData.doorHandle && doorData.doorHandle !== '일반' ? `, 손잡이: ${doorData.doorHandle}` : ''}</div>
-                                                            )}
-                                                            {doorData.entranceDoor && doorData.entranceDoor !== '미선택' && (
-                                                                <div><span className="font-bold text-rose-500">[현관중문]</span> {doorData.entranceDoor}</div>
-                                                            )}
-                                                            {doorData.moldingType && doorData.moldingType !== '미선택' && (
-                                                                <div><span className="font-bold text-amber-500">[몰딩]</span> {doorData.moldingType}</div>
-                                                            )}
-                                                            {doorData.skirtingType && doorData.skirtingType !== '미선택' && (
-                                                                <div><span className="font-bold text-amber-500">[걸레받이]</span> {doorData.skirtingType}</div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                            {Object.entries(formData.detailsBySpace).every(([space, data]) => {
-                                                const doorData = formData.doorDetailsBySpace[space] || {};
-                                                return (data.lighting?.length || 0) === 0 && 
-                                                       (data.electrical?.length || 0) === 0 && 
-                                                       (data.carpentry?.length || 0) === 0 &&
-                                                       (!doorData.doorStyle || doorData.doorStyle === '미선택') &&
-                                                       (!doorData.doorHandle || doorData.doorHandle === '일반') &&
-                                                       (!doorData.moldingType || doorData.moldingType === '미선택') &&
-                                                       (!doorData.skirtingType || doorData.skirtingType === '미선택') &&
-                                                       (!doorData.entranceDoor || doorData.entranceDoor === '미선택');
-                                            }) && (
-                                                <p className="text-xs text-slate-400 italic">선택된 항목이 없습니다.</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    </div>
-                                );
-                            })()}
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </section>
 
                         <footer className="py-12 text-center text-slate-300 border-t border-slate-100 mt-12 font-bold font-sans font-bold">
