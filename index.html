@@ -234,7 +234,14 @@
                 airconCount: 0,
                 airconLocation: ''
             });
-            const activeFinishes = formData.finishesBySpace[formData.activeFinishSpace];
+            const activeFinishes = formData.finishesBySpace[formData.activeFinishSpace] || {
+                floor: '미선택',
+                floorOption: '미선택',
+                wall: '미선택',
+                wallpaperTypeWall: '미선택',
+                wallpaperTypeCeiling: '미선택',
+                ceiling: '미선택'
+            };
             const wallIsPaper = activeFinishes?.wall === '벽지';
             const ceilingIsPaper = activeFinishes?.ceiling === '벽지';
 
@@ -811,7 +818,15 @@
                                                         <button 
                                                             key={s} 
                                                             type="button"
-                                                            onClick={() => setFormData(p => ({...p, activeFinishSpace: s}))}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                try {
+                                                                    setFormData(p => ({...p, activeFinishSpace: s}));
+                                                                } catch (error) {
+                                                                    console.error('Error changing activeFinishSpace:', error);
+                                                                }
+                                                            }}
                                                             className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border ${formData.activeFinishSpace === s ? 'bg-amber-500 text-white border-amber-500 shadow-md' : 'bg-white text-slate-400 border-slate-200 hover:border-amber-200'}`}
                                                         >
                                                             {s} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
@@ -919,7 +934,15 @@
                                             <button 
                                                 key={space} 
                                                 type="button"
-                                                onClick={() => setFormData(p => ({...p, activeSpace: space}))} 
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    try {
+                                                        setFormData(p => ({...p, activeSpace: space}));
+                                                    } catch (error) {
+                                                        console.error('Error changing activeSpace:', error);
+                                                    }
+                                                }} 
                                                 className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border ${formData.activeSpace === space ? 'bg-emerald-500 border-emerald-500 text-white shadow-md' : 'bg-white text-slate-400 border-slate-200 hover:border-emerald-200'}`}
                                             >
                                                 {space} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
@@ -976,7 +999,15 @@
                                             <button 
                                                 key={space} 
                                                 type="button"
-                                                onClick={() => setFormData(p => ({...p, activeDetailSpace: space}))} 
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    try {
+                                                        setFormData(p => ({...p, activeDetailSpace: space}));
+                                                    } catch (error) {
+                                                        console.error('Error changing activeDetailSpace:', error);
+                                                    }
+                                                }} 
                                                 className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border ${formData.activeDetailSpace === space ? 'bg-rose-500 text-white border-rose-500 shadow-md' : 'bg-white text-slate-400 border-slate-200 hover:border-rose-200'}`}
                                             >
                                                 {space} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
