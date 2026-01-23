@@ -559,7 +559,7 @@
                                 <div className="group relative bg-gradient-to-br from-slate-50 to-white rounded-2xl border-2 border-slate-100 hover:border-blue-200 focus-within:border-blue-300 focus-within:bg-white transition-all p-5 shadow-sm">
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center">
-                                            <Icon name="home" size={16} className="text-blue-600" />
+                                            <Icon name="maximize" size={16} className="text-blue-600" />
                                         </div>
                                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">평수</span>
                                     </div>
@@ -572,7 +572,7 @@
                                 <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl border-2 border-slate-100 shadow-sm p-5">
                                     <div className="flex items-center gap-2 mb-3">
                                         <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center">
-                                            <Icon name="target" size={16} className="text-amber-600" />
+                                            <Icon name="flag" size={16} className="text-amber-600" />
                                         </div>
                                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">공사 목적</span>
                                     </div>
@@ -635,7 +635,7 @@
                                                 className="hidden" 
                                             />
                                             <div className="flex items-center gap-2">
-                                                <Icon name="arrow-up-square" size={14} className={(formData.hasElevator === true || formData.hasElevator === 'true') ? "text-blue-500" : "text-slate-300"} />
+                                                <Icon name="move-vertical" size={16} className={(formData.hasElevator === true || formData.hasElevator === 'true') ? "text-blue-500" : "text-slate-300"} />
                                                 <span className={`text-xs font-black ${(formData.hasElevator === true || formData.hasElevator === 'true') ? 'text-blue-600' : 'text-slate-400'}`}>엘리베이터</span>
                                             </div>
                                         </label>
@@ -655,7 +655,7 @@
                                                 className="hidden" 
                                             />
                                             <div className="flex items-center gap-2">
-                                                <Icon name="thermometer-snowflake" size={14} className={(formData.isOuterWall === true || formData.isOuterWall === 'true') ? "text-red-500" : "text-slate-300"} />
+                                                <Icon name="square" size={16} className={(formData.isOuterWall === true || formData.isOuterWall === 'true') ? "text-red-500" : "text-slate-300"} />
                                                 <span className={`text-xs font-black ${(formData.isOuterWall === true || formData.isOuterWall === 'true') ? 'text-red-600' : 'text-slate-400'}`}>외벽 라인</span>
                                             </div>
                                         </label>
@@ -1085,16 +1085,47 @@
                                     <div>
                                         <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans"><Icon name="scissors" size={16} className="text-amber-400"/> 목공 마감</h4>
                                         <div className="space-y-4">
+                                            {/* 몰딩 */}
                                             <div>
                                                 <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">몰딩</label>
-                                                <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-amber-400 transition-colors" value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.moldingType || '미선택'} onChange={(e) => handleDoorDetailChange('moldingType', e.target.value)}>
-                                                    <option value="미선택">미선택</option><option value="무몰딩">무몰딩</option><option value="마이너스몰딩">마이너스몰딩</option><option value="일반몰딩">일반몰딩</option>
+                                                <select
+                                                    className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-amber-400 transition-colors"
+                                                    value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.moldingType || '미선택'}
+                                                    onChange={(e) => handleDoorDetailChange('moldingType', e.target.value)}
+                                                >
+                                                    <option value="미선택">미선택</option>
+                                                    <option value="무몰딩">무몰딩</option>
+                                                    <option value="마이너스몰딩">마이너스몰딩</option>
+                                                    <option value="일반몰딩">일반몰딩</option>
                                                 </select>
                                             </div>
+                                            {/* 걸레받이 - 몰딩과 동일 옵션/양식 */}
+                                            <div>
+                                                <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">걸레받이</label>
+                                                <select
+                                                    className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-amber-400 transition-colors"
+                                                    value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.skirtingType || '미선택'}
+                                                    onChange={(e) => handleDoorDetailChange('skirtingType', e.target.value)}
+                                                >
+                                                    <option value="미선택">미선택</option>
+                                                    <option value="무몰딩">무몰딩</option>
+                                                    <option value="마이너스몰딩">마이너스몰딩</option>
+                                                    <option value="일반몰딩">일반몰딩</option>
+                                                </select>
+                                            </div>
+                                            {/* 현관 중문 */}
                                             <div>
                                                 <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">현관 중문</label>
-                                                <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-rose-400 transition-colors" value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.entranceDoor || '미선택'} onChange={(e) => handleDoorDetailChange('entranceDoor', e.target.value)}>
-                                                    <option value="미선택">미선택</option><option value="초슬림 3연동">초슬림 3연동</option><option value="원슬라이딩">원슬라이딩</option><option value="비대칭 여닫이">비대칭 여닫이</option><option value="스윙도어">스윙도어</option>
+                                                <select
+                                                    className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-rose-400 transition-colors"
+                                                    value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.entranceDoor || '미선택'}
+                                                    onChange={(e) => handleDoorDetailChange('entranceDoor', e.target.value)}
+                                                >
+                                                    <option value="미선택">미선택</option>
+                                                    <option value="초슬림 3연동">초슬림 3연동</option>
+                                                    <option value="원슬라이딩">원슬라이딩</option>
+                                                    <option value="비대칭 여닫이">비대칭 여닫이</option>
+                                                    <option value="스윙도어">스윙도어</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -1108,27 +1139,91 @@
                                 <div className="space-y-4">
                                     {Object.entries(formData.detailsBySpace).map(([space, data]) => {
                                         const doorData = formData.doorDetailsBySpace[space] || {};
-                                        const hasContent = (data.lighting?.length || 0) > 0 || (data.electrical?.length || 0) > 0 || (data.carpentry?.length || 0) > 0 || (doorData.doorStyle && doorData.doorStyle !== '미선택') || (doorData.entranceDoor && doorData.entranceDoor !== '미선택');
+                                        const hasContent =
+                                            (data.lighting?.length || 0) > 0 ||
+                                            (data.electrical?.length || 0) > 0 ||
+                                            (data.carpentry?.length || 0) > 0 ||
+                                            (doorData.doorStyle && doorData.doorStyle !== '미선택') ||
+                                            (doorData.moldingType && doorData.moldingType !== '미선택') ||
+                                            (doorData.skirtingType && doorData.skirtingType !== '미선택') ||
+                                            (doorData.entranceDoor && doorData.entranceDoor !== '미선택');
+
                                         if (!hasContent) return null;
+
                                         return (
                                             <div key={space} className="border-b border-rose-100 pb-3 last:border-0">
                                                 <div className="font-black text-rose-600 text-xs mb-2">[{space}]</div>
                                                 <div className="space-y-1 text-xs text-slate-700 ml-2">
-                                                    {data.lighting?.length > 0 && <div><span className="font-bold text-orange-500">[조명]</span> {data.lighting.map(l => `${l}${data.lightingLocations?.[l] ? `(${data.lightingLocations[l]})` : ''}`).join(', ')}</div>}
-                                                    {data.electrical?.length > 0 && <div><span className="font-bold text-teal-600">[전기]</span> {data.electrical.join(', ')}</div>}
-                                                    {data.carpentry?.length > 0 && <div><span className="font-bold text-blue-500">[목공]</span> {data.carpentry.join(', ')}</div>}
-                                                    {doorData.doorStyle && doorData.doorStyle !== '미선택' && <div><span className="font-bold text-purple-500">[문선]</span> {doorData.doorStyle}{doorData.doorHandle && doorData.doorHandle !== '일반' ? `, 손잡이: ${doorData.doorHandle}` : ''}</div>}
-                                                    {doorData.entranceDoor && doorData.entranceDoor !== '미선택' && <div><span className="font-bold text-rose-500">[현관중문]</span> {doorData.entranceDoor}</div>}
+                                                    {data.lighting?.length > 0 && (
+                                                        <div>
+                                                            <span className="font-bold text-orange-500">[조명]</span>{' '}
+                                                            {data.lighting
+                                                                .map(
+                                                                    l =>
+                                                                        `${l}${
+                                                                            data.lightingLocations?.[l]
+                                                                                ? `(${data.lightingLocations[l]})`
+                                                                                : ''
+                                                                        }`,
+                                                                )
+                                                                .join(', ')}
+                                                        </div>
+                                                    )}
+                                                    {data.electrical?.length > 0 && (
+                                                        <div>
+                                                            <span className="font-bold text-teal-600">[전기]</span>{' '}
+                                                            {data.electrical.join(', ')}
+                                                        </div>
+                                                    )}
+                                                    {data.carpentry?.length > 0 && (
+                                                        <div>
+                                                            <span className="font-bold text-blue-500">[목공]</span>{' '}
+                                                            {data.carpentry.join(', ')}
+                                                        </div>
+                                                    )}
+                                                    {doorData.doorStyle && doorData.doorStyle !== '미선택' && (
+                                                        <div>
+                                                            <span className="font-bold text-purple-500">[문선]</span>{' '}
+                                                            {doorData.doorStyle}
+                                                            {doorData.doorHandle && doorData.doorHandle !== '일반'
+                                                                ? `, 손잡이: ${doorData.doorHandle}`
+                                                                : ''}
+                                                        </div>
+                                                    )}
+                                                    {doorData.moldingType && doorData.moldingType !== '미선택' && (
+                                                        <div>
+                                                            <span className="font-bold text-amber-500">[몰딩]</span>{' '}
+                                                            {doorData.moldingType}
+                                                        </div>
+                                                    )}
+                                                    {doorData.skirtingType && doorData.skirtingType !== '미선택' && (
+                                                        <div>
+                                                            <span className="font-bold text-amber-500">[걸레받이]</span>{' '}
+                                                            {doorData.skirtingType}
+                                                        </div>
+                                                    )}
+                                                    {doorData.entranceDoor && doorData.entranceDoor !== '미선택' && (
+                                                        <div>
+                                                            <span className="font-bold text-rose-500">[현관중문]</span>{' '}
+                                                            {doorData.entranceDoor}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
                                     })}
                                     {Object.entries(formData.detailsBySpace).every(([space, data]) => {
                                         const doorData = formData.doorDetailsBySpace[space] || {};
-                                        return (data.lighting?.length || 0) === 0 && (data.electrical?.length || 0) === 0 && (data.carpentry?.length || 0) === 0 && (!doorData.doorStyle || doorData.doorStyle === '미선택') && (!doorData.entranceDoor || doorData.entranceDoor === '미선택');
-                                    }) && (
-                                        <p className="text-xs text-slate-400 italic">선택된 항목이 없습니다.</p>
-                                    )}
+                                        return (
+                                            (data.lighting?.length || 0) === 0 &&
+                                            (data.electrical?.length || 0) === 0 &&
+                                            (data.carpentry?.length || 0) === 0 &&
+                                            (!doorData.doorStyle || doorData.doorStyle === '미선택') &&
+                                            (!doorData.moldingType || doorData.moldingType === '미선택') &&
+                                            (!doorData.skirtingType || doorData.skirtingType === '미선택') &&
+                                            (!doorData.entranceDoor || doorData.entranceDoor === '미선택')
+                                        );
+                                    }) && <p className="text-xs text-slate-400 italic">선택된 항목이 없습니다.</p>}
                                 </div>
                             </div>
                         </section>
