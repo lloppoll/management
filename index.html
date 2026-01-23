@@ -298,8 +298,8 @@
             };
 
             const toggleDetailForSpace = (category, item) => {
-                const space = formData.activeDetailSpace;
                 setFormData(prev => {
+                    const space = prev.activeDetailSpace;
                     const currentSpace = prev.detailsBySpace[space] || { lighting: [], electrical: [], carpentry: [], lightingLocations: {} };
                     const currentArray = currentSpace[category] || [];
                     const isArray = Array.isArray(currentArray);
@@ -322,8 +322,8 @@
             };
 
             const handleDetailLocationChange = (item, value) => {
-                const space = formData.activeDetailSpace;
                 setFormData(prev => {
+                    const space = prev.activeDetailSpace;
                     const currentSpace = prev.detailsBySpace[space] || { lighting: [], electrical: [], carpentry: [], lightingLocations: {} };
                     return {
                         ...prev,
