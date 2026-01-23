@@ -38,16 +38,41 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo } = React;
 
-        // Lucide 아이콘을 React에서 사용하기 위한 컴포넌트
+        // 수정된 Icon 컴포넌트: Lucide 아이콘과 React Virtual DOM 간의 충돌을 방지하기 위해 
+        // 직접적인 DOM 조작 대신 SVG 문자열을 삽입하는 방식을 사용합니다.
         const Icon = ({ name, size = 20, className = "" }) => {
+            const [svgContent, setSvgContent] = useState('');
+
             useEffect(() => {
-                if (window.lucide) {
-                    window.lucide.createIcons();
+                const generateIcon = () => {
+                    if (window.lucide && window.lucide.icons && window.lucide.icons[name]) {
+                        const svg = window.lucide.icons[name].toSvg({
+                            width: size,
+                            height: size,
+                            class: className,
+                            'stroke-width': 2
+                        });
+                        setSvgContent(svg);
+                    }
+                };
+
+                generateIcon();
+                if (!svgContent && window.lucide) {
+                    const timer = setTimeout(generateIcon, 100);
+                    return () => clearTimeout(timer);
                 }
-            });
-            return <i data-lucide={name} className={className} style={{ width: size, height: size, display: 'inline-block' }}></i>;
+            }, [name, size, className, !!window.lucide]);
+
+            if (!svgContent) return <span style={{ width: size, height: size, display: 'inline-block' }}></span>;
+
+            return (
+                <span 
+                    style={{ width: size, height: size, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                    dangerouslySetInnerHTML={{ __html: svgContent }} 
+                />
+            );
         };
 
         // 개별 아이콘 컴포넌트 정의
@@ -194,7 +219,6 @@
                 kitchenCountertop: '인조대리석',
                 kitchenExtra: '',
                 activeFinishSpace: '전체',
-                // 마감재 초기화: 모든 공간 미선택으로 설정
                 finishesBySpace: SPACES.reduce((acc, s) => ({
                     ...acc, 
                     [s]: { floor: '미선택', floorOption: '미선택', wall: '미선택', wallpaperTypeWall: '미선택', wallpaperTypeCeiling: '미선택', ceiling: '미선택' }
@@ -234,16 +258,6 @@
                 airconCount: 0,
                 airconLocation: ''
             });
-            const activeFinishes = formData.finishesBySpace[formData.activeFinishSpace] || {
-                floor: '미선택',
-                floorOption: '미선택',
-                wall: '미선택',
-                wallpaperTypeWall: '미선택',
-                wallpaperTypeCeiling: '미선택',
-                ceiling: '미선택'
-            };
-            const wallIsPaper = activeFinishes?.wall === '벽지';
-            const ceilingIsPaper = activeFinishes?.ceiling === '벽지';
 
             const handleInputChange = (e) => {
                 try {
@@ -270,16 +284,13 @@
 
             const handleFinishChange = (key, value) => {
                 const space = formData.activeFinishSpace;
-                setFormData(prev => {
-                    const currentSpace = prev.finishesBySpace[space] || {};
-                    return {
-                        ...prev,
-                        finishesBySpace: {
-                            ...prev.finishesBySpace,
-                            [space]: { ...currentSpace, [key]: value }
-                        }
-                    };
-                });
+                setFormData(prev => ({
+                    ...prev,
+                    finishesBySpace: {
+                        ...prev.finishesBySpace,
+                        [space]: { ...(prev.finishesBySpace[space] || {}), [key]: value }
+                    }
+                }));
             };
 
             const toggleFurnitureForSpace = (item) => {
@@ -301,8 +312,7 @@
                 setFormData(prev => {
                     const space = prev.activeDetailSpace;
                     const currentSpace = prev.detailsBySpace[space] || { lighting: [], electrical: [], carpentry: [], lightingLocations: {} };
-                    const currentArray = currentSpace[category] || [];
-                    const isArray = Array.isArray(currentArray);
+                    const currentArray = Array.isArray(currentSpace[category]) ? currentSpace[category] : [];
                     
                     return {
                         ...prev,
@@ -310,11 +320,9 @@
                             ...prev.detailsBySpace,
                             [space]: {
                                 ...currentSpace,
-                                [category]: isArray && currentArray.includes(item)
+                                [category]: currentArray.includes(item)
                                     ? currentArray.filter(i => i !== item)
-                                    : isArray
-                                    ? [...currentArray, item]
-                                    : [item]
+                                    : [...currentArray, item]
                             }
                         }
                     };
@@ -461,8 +469,8 @@
                                                             onClick={() => handleBathChange(type, item.key, opt)}
                                                             className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${
                                                                 formData[type][item.key] === opt 
-                                                                ? 'bg-white text-slate-900 shadow-sm' 
-                                                                : 'text-slate-400 hover:text-slate-600'
+                                                                    ? 'bg-white text-slate-900 shadow-sm' 
+                                                                    : 'text-slate-400 hover:text-slate-600'
                                                             }`}
                                                         >
                                                             {opt}
@@ -551,7 +559,7 @@
                                 <div className="group relative bg-gradient-to-br from-slate-50 to-white rounded-2xl border-2 border-slate-100 hover:border-blue-200 focus-within:border-blue-300 focus-within:bg-white transition-all p-5 shadow-sm">
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center">
-                                            <Home size={16} className="text-blue-600" />
+                                            <Icon name="home" size={16} className="text-blue-600" />
                                         </div>
                                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">평수</span>
                                     </div>
@@ -564,7 +572,7 @@
                                 <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl border-2 border-slate-100 shadow-sm p-5">
                                     <div className="flex items-center gap-2 mb-3">
                                         <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center">
-                                            <Target size={16} className="text-amber-600" />
+                                            <Icon name="target" size={16} className="text-amber-600" />
                                         </div>
                                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">공사 목적</span>
                                     </div>
@@ -588,7 +596,7 @@
                                 <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl border-2 border-slate-100 shadow-sm p-5">
                                     <div className="flex items-center gap-2 mb-3">
                                         <div className="w-8 h-8 bg-purple-100 rounded-xl flex items-center justify-center">
-                                            <Building size={16} className="text-purple-600" />
+                                            <Icon name="building" size={16} className="text-purple-600" />
                                         </div>
                                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">유형 & 층수</span>
                                     </div>
@@ -606,7 +614,7 @@
                                 <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl border-2 border-slate-100 shadow-sm p-5">
                                     <div className="flex items-center gap-2 mb-3">
                                         <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center">
-                                            <Settings size={16} className="text-green-600" />
+                                            <Icon name="settings" size={16} className="text-green-600" />
                                         </div>
                                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">옵션</span>
                                     </div>
@@ -617,23 +625,17 @@
                                                     ? 'bg-blue-500 border-blue-500' 
                                                     : 'bg-white border-slate-300 group-hover:border-blue-300'
                                             }`}>
-                                                {(formData.hasElevator === true || formData.hasElevator === 'true') && <Check size={12} className="text-white" />}
+                                                {(formData.hasElevator === true || formData.hasElevator === 'true') && <Icon name="check" size={12} className="text-white" />}
                                             </div>
                                             <input 
                                                 type="checkbox" 
                                                 name="hasElevator" 
                                                 checked={formData.hasElevator === true || formData.hasElevator === 'true'} 
-                                                onChange={(e) => {
-                                                    try {
-                                                        setFormData(prev => ({ ...prev, hasElevator: e.target.checked }));
-                                                    } catch (error) {
-                                                        console.error('Elevator checkbox error:', error);
-                                                    }
-                                                }} 
+                                                onChange={(e) => setFormData(prev => ({ ...prev, hasElevator: e.target.checked }))} 
                                                 className="hidden" 
                                             />
                                             <div className="flex items-center gap-2">
-                                                <ArrowUpSquare size={14} className={(formData.hasElevator === true || formData.hasElevator === 'true') ? "text-blue-500" : "text-slate-300"} />
+                                                <Icon name="arrow-up-square" size={14} className={(formData.hasElevator === true || formData.hasElevator === 'true') ? "text-blue-500" : "text-slate-300"} />
                                                 <span className={`text-xs font-black ${(formData.hasElevator === true || formData.hasElevator === 'true') ? 'text-blue-600' : 'text-slate-400'}`}>엘리베이터</span>
                                             </div>
                                         </label>
@@ -643,23 +645,17 @@
                                                     ? 'bg-red-500 border-red-500' 
                                                     : 'bg-white border-slate-300 group-hover:border-red-300'
                                             }`}>
-                                                {(formData.isOuterWall === true || formData.isOuterWall === 'true') && <Check size={12} className="text-white" />}
+                                                {(formData.isOuterWall === true || formData.isOuterWall === 'true') && <Icon name="check" size={12} className="text-white" />}
                                             </div>
                                             <input 
                                                 type="checkbox" 
                                                 name="isOuterWall" 
                                                 checked={formData.isOuterWall === true || formData.isOuterWall === 'true'} 
-                                                onChange={(e) => {
-                                                    try {
-                                                        setFormData(prev => ({ ...prev, isOuterWall: e.target.checked }));
-                                                    } catch (error) {
-                                                        console.error('OuterWall checkbox error:', error);
-                                                    }
-                                                }} 
+                                                onChange={(e) => setFormData(prev => ({ ...prev, isOuterWall: e.target.checked }))} 
                                                 className="hidden" 
                                             />
                                             <div className="flex items-center gap-2">
-                                                <ThermometerSnowflake size={14} className={(formData.isOuterWall === true || formData.isOuterWall === 'true') ? "text-red-500" : "text-slate-300"} />
+                                                <Icon name="thermometer-snowflake" size={14} className={(formData.isOuterWall === true || formData.isOuterWall === 'true') ? "text-red-500" : "text-slate-300"} />
                                                 <span className={`text-xs font-black ${(formData.isOuterWall === true || formData.isOuterWall === 'true') ? 'text-red-600' : 'text-slate-400'}`}>외벽 라인</span>
                                             </div>
                                         </label>
@@ -674,7 +670,7 @@
 
                         <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-l-8 border-slate-900 font-bold section-break">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 font-sans font-bold">
-                                <h3 className="font-black text-slate-900 text-xl flex items-center gap-2"><Trash2 size={24} /> 철거 및 공사 범위</h3>
+                                <h3 className="font-black text-slate-900 text-xl flex items-center gap-2"><Icon name="trash-2" size={24} /> 철거 및 공사 범위</h3>
                                 <div className="flex gap-2">
                                     {['전체', '부분'].map(s => (<button key={s} onClick={() => setFormData(p => ({...p, scope: s}))} className={`px-8 py-2 rounded-xl font-black transition-all border-2 ${formData.scope === s ? 'bg-slate-900 border-slate-900 text-white shadow-md' : 'bg-slate-50 border-transparent text-slate-400'}`}>{s}</button>))}
                                 </div>
@@ -683,7 +679,7 @@
                         </section>
 
                         <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-l-8 border-cyan-400 font-bold section-break">
-                            <h3 className="font-black text-cyan-600 mb-6 flex items-center gap-2 text-xl tracking-tight"><Snowflake size={24} /> 냉방 가전 계획</h3>
+                            <h3 className="font-black text-cyan-600 mb-6 flex items-center gap-2 text-xl tracking-tight"><Icon name="snowflake" size={24} /> 냉방 가전 계획</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-sans">
                                 <div className="space-y-4">
                                     <div className="flex gap-2 font-bold font-sans">
@@ -707,7 +703,7 @@
                         {/* 창호 및 확장 공사 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans font-bold section-break">
                             <div className="bg-white p-6 rounded-3xl shadow-sm border-t-4 border-blue-500">
-                                <h3 className="font-black text-blue-600 mb-5 flex items-center gap-2 text-lg"><Wind size={20} /> 창호 브랜드</h3>
+                                <h3 className="font-black text-blue-600 mb-5 flex items-center gap-2 text-lg"><Icon name="wind" size={20} /> 창호 브랜드</h3>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                     {[{ name: 'LX하우시스', sub: '20%▲' }, { name: '이건창호', sub: '10%▲' }, { name: 'KCC', sub: '표준' }].map(brand => (
                                         <button
@@ -726,7 +722,7 @@
                                 </div>
                             </div>
                             <div className="bg-white p-6 rounded-3xl shadow-sm border-t-4 border-orange-500">
-                                <h3 className="font-black text-orange-600 mb-5 flex items-center gap-2 text-lg"><Maximize size={20} /> 확장 공사</h3>
+                                <h3 className="font-black text-orange-600 mb-5 flex items-center gap-2 text-lg"><Icon name="maximize" size={20} /> 확장 공사</h3>
                                 <div className="grid grid-cols-3 gap-2">
                                     {['거실', '주방', '안방', '침실1', '침실2', '발코니'].map(room => (
                                         <label
@@ -751,7 +747,7 @@
                         </div>
 
                         <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-l-8 border-teal-500 font-bold section-break">
-                            <h3 className="font-black text-teal-600 mb-6 flex items-center gap-2 text-xl tracking-tight"><Utensils size={24} /> 주방 사양</h3>
+                            <h3 className="font-black text-teal-600 mb-6 flex items-center gap-2 text-xl tracking-tight"><Icon name="utensils" size={24} /> 주방 사양</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                 <div className="font-sans">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 mb-4">빌트인 가전</p>
@@ -815,7 +811,7 @@
                                         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-8">
                                             <div className="flex items-center gap-5">
                                                 <div className="w-14 h-14 bg-amber-500 rounded-[1.5rem] flex items-center justify-center text-white shadow-xl shadow-amber-100">
-                                                    <Layers size={28} />
+                                                    <Icon name="layers" size={28} />
                                                 </div>
                                                 <div>
                                                     <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-1">마감재 사양</h3>
@@ -836,12 +832,7 @@
                                                             type="button"
                                                             onClick={(e) => {
                                                                 e.preventDefault();
-                                                                e.stopPropagation();
-                                                                try {
-                                                                    setFormData(p => ({...p, activeFinishSpace: s}));
-                                                                } catch (error) {
-                                                                    console.error('Error changing activeFinishSpace:', error);
-                                                                }
+                                                                setFormData(p => ({...p, activeFinishSpace: s}));
                                                             }}
                                                             className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border ${formData.activeFinishSpace === s ? 'bg-amber-500 text-white border-amber-500 shadow-md' : 'bg-white text-slate-400 border-slate-200 hover:border-amber-200'}`}
                                                         >
@@ -864,7 +855,6 @@
                                                 detailOptions={[]}
                                                 onMainChange={(val) => handleFinishChange('floor', val)}
                                                 onDetailChange={(val) => handleFinishChange('floorOption', val)}
-                                                activeFinishes={activeFinishes}
                                             />
                                             <FinishItem 
                                                 type="wall"
@@ -877,7 +867,6 @@
                                                 detailOptions={WALLPAPER_TYPES}
                                                 onMainChange={(val) => handleFinishChange('wall', val)}
                                                 onDetailChange={(val) => handleFinishChange('wallpaperTypeWall', val)}
-                                                activeFinishes={activeFinishes}
                                             />
                                             <FinishItem 
                                                 type="ceiling"
@@ -890,11 +879,9 @@
                                                 detailOptions={WALLPAPER_TYPES}
                                                 onMainChange={(val) => handleFinishChange('ceiling', val)}
                                                 onDetailChange={(val) => handleFinishChange('wallpaperTypeCeiling', val)}
-                                                activeFinishes={activeFinishes}
                                             />
                                         </div>
 
-                                        {/* 마감재 사양 요약 */}
                                         <div className="mt-8 pt-6 border-t-2 border-amber-200 bg-amber-50/30 rounded-2xl p-6">
                                             <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-4 flex items-center gap-2">
                                                 <Icon name="file-text" size={14} />
@@ -904,15 +891,9 @@
                                                 {SPACES.map(space => {
                                                     const finishes = formData.finishesBySpace[space] || {};
                                                     const items = [];
-                                                    if (finishes.floor && finishes.floor !== '미선택') {
-                                                        items.push(`바닥: ${finishes.floor}${finishes.floorOption && finishes.floorOption !== '미선택' ? `(${finishes.floorOption})` : ''}`);
-                                                    }
-                                                    if (finishes.wall && finishes.wall !== '미선택') {
-                                                        items.push(`벽체: ${finishes.wall}${finishes.wallpaperTypeWall && finishes.wallpaperTypeWall !== '미선택' ? `(${finishes.wallpaperTypeWall})` : ''}`);
-                                                    }
-                                                    if (finishes.ceiling && finishes.ceiling !== '미선택') {
-                                                        items.push(`천장: ${finishes.ceiling}${finishes.wallpaperTypeCeiling && finishes.wallpaperTypeCeiling !== '미선택' ? `(${finishes.wallpaperTypeCeiling})` : ''}`);
-                                                    }
+                                                    if (finishes.floor && finishes.floor !== '미선택') items.push(`바닥: ${finishes.floor}${finishes.floorOption && finishes.floorOption !== '미선택' ? `(${finishes.floorOption})` : ''}`);
+                                                    if (finishes.wall && finishes.wall !== '미선택') items.push(`벽체: ${finishes.wall}${finishes.wallpaperTypeWall && finishes.wallpaperTypeWall !== '미선택' ? `(${finishes.wallpaperTypeWall})` : ''}`);
+                                                    if (finishes.ceiling && finishes.ceiling !== '미선택') items.push(`천장: ${finishes.ceiling}${finishes.wallpaperTypeCeiling && finishes.wallpaperTypeCeiling !== '미선택' ? `(${finishes.wallpaperTypeCeiling})` : ''}`);
                                                     return items.length > 0 ? (
                                                         <div key={space} className="flex gap-3 items-start text-xs">
                                                             <span className="font-black text-amber-600 shrink-0 min-w-[50px]">[{space}]</span>
@@ -920,12 +901,7 @@
                                                         </div>
                                                     ) : null;
                                                 })}
-                                                {SPACES.every(space => {
-                                                    const finishes = formData.finishesBySpace[space] || {};
-                                                    return (!finishes.floor || finishes.floor === '미선택') && 
-                                                           (!finishes.wall || finishes.wall === '미선택') && 
-                                                           (!finishes.ceiling || finishes.ceiling === '미선택');
-                                                }) && (
+                                                {SPACES.every(s => !Object.values(formData.finishesBySpace[s] || {}).some(v => v && v !== '미선택')) && (
                                                     <p className="text-xs text-slate-400 italic">선택된 마감재가 없습니다.</p>
                                                 )}
                                             </div>
@@ -942,24 +918,19 @@
 
                         <section className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border-l-8 border-emerald-500 font-bold section-break">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                                <h3 className="font-black text-emerald-600 text-xl flex items-center gap-2"><Box size={24} /> 가구 및 수납 계획</h3>
+                                <h3 className="font-black text-emerald-600 text-xl flex items-center gap-2"><Icon name="box" size={24} /> 가구 및 수납 계획</h3>
                                 <div className="flex flex-wrap gap-1.5 bg-slate-50 p-2 rounded-[1.5rem] border border-slate-100 print:hidden">
                                     {Object.keys(formData.furnitureBySpace).map(space => {
-                                        const count = formData.furnitureBySpace[space].length;
+                                        const count = (formData.furnitureBySpace[space] || []).length;
                                         return (
                                             <button 
                                                 key={space} 
                                                 type="button"
                                                 onClick={(e) => {
                                                     e.preventDefault();
-                                                    e.stopPropagation();
-                                                    try {
-                                                        setFormData(p => ({...p, activeSpace: space}));
-                                                    } catch (error) {
-                                                        console.error('Error changing activeSpace:', error);
-                                                    }
+                                                    setFormData(p => ({...p, activeSpace: space}));
                                                 }} 
-                                                className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border ${formData.activeSpace === space ? 'bg-emerald-500 border-emerald-500 text-white shadow-md' : 'bg-white text-slate-400 border-slate-200 hover:border-emerald-200'}`}
+                                                className={`px-4 py-1.5 rounded-full text-[11px] font-black transition-all border ${formData.activeSpace === space ? 'bg-emerald-500 text-white border-emerald-500 shadow-md' : 'bg-white text-slate-400 border-slate-200 hover:border-emerald-200'}`}
                                             >
                                                 {space} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
                                             </button>
@@ -975,7 +946,7 @@
                                     </div>
                                     <div className="grid grid-cols-2 gap-3 font-bold">
                                         {['붙박이장', '화장대', '신발장', '팬트리', '키큰장', '펜트리장', '오픈 수납장'].map(item => (
-                                            <label key={item} className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all cursor-pointer font-sans ${formData.furnitureBySpace[formData.activeSpace].includes(item) ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg font-sans font-bold' : 'bg-white border-slate-100 text-slate-400 hover:border-emerald-100 font-sans'}`}><input type="checkbox" className="hidden" checked={formData.furnitureBySpace[formData.activeSpace].includes(item)} onChange={() => toggleFurnitureForSpace(item)} /><span className="text-xs font-black font-sans font-bold">{item}</span></label>
+                                            <label key={item} className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all cursor-pointer font-sans ${(formData.furnitureBySpace[formData.activeSpace] || []).includes(item) ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg font-sans font-bold' : 'bg-white border-slate-100 text-slate-400 hover:border-emerald-100 font-sans'}`}><input type="checkbox" className="hidden" checked={(formData.furnitureBySpace[formData.activeSpace] || []).includes(item)} onChange={() => toggleFurnitureForSpace(item)} /><span className="text-xs font-black font-sans font-bold">{item}</span></label>
                                         ))}
                                     </div>
                                 </div>
@@ -984,26 +955,26 @@
                                 </div>
                             </div>
 
-                            {/* 가구 및 수납 계획 요약 */}
                             <div className="mt-8 pt-6 border-t-2 border-emerald-200 bg-emerald-50/30 rounded-2xl p-6">
                                 <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4 flex items-center gap-2">
                                     <Icon name="file-text" size={14} />
                                     가구 및 수납 계획 요약 (Summary)
                                 </p>
                                 <div className="space-y-3">
-                                    {Object.entries(formData.furnitureBySpace).map(([space, items]) => items.length > 0 && (
+                                    {Object.entries(formData.furnitureBySpace).map(([space, items]) => (items || []).length > 0 && (
                                         <div key={space} className="flex gap-3 items-start text-xs">
                                             <span className="font-black text-emerald-600 shrink-0 min-w-[50px]">[{space}]</span>
                                             <span className="font-medium text-slate-700 leading-relaxed">{items.join(', ')}</span>
                                         </div>
                                     ))}
-                                    {Object.values(formData.furnitureBySpace).every(items => items.length === 0) && (
+                                    {Object.values(formData.furnitureBySpace).every(items => (items || []).length === 0) && (
                                         <p className="text-xs text-slate-400 italic">선택된 가구가 없습니다.</p>
                                     )}
                                 </div>
                             </div>
                         </section>
 
+                        {/* 수정된 전기 및 목공 디테일 섹션 */}
                         <section className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border-t-8 border-rose-500 font-bold section-break">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
                                 <h3 className="font-black text-rose-600 text-xl flex items-center gap-2"><Icon name="zap" size={24} /> 전기 및 목공 디테일</h3>
@@ -1030,10 +1001,11 @@
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 relative">
                                     {/* 조명 */}
                                     <div>
-                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2"><Icon name="lightbulb" size={16} className="text-orange-400"/> 공간 조명</h4>
+                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans"><Icon name="lightbulb" size={16} className="text-orange-400"/> 공간 조명</h4>
                                         <div className="space-y-3.5">
                                             {['메인등', '매립등(다운)', '간접 조명', '라인 조명', '실링팬'].map(light => {
-                                                const currentLighting = formData.detailsBySpace[formData.activeDetailSpace]?.lighting || [];
+                                                const detail = formData.detailsBySpace[formData.activeDetailSpace] || {};
+                                                const currentLighting = detail.lighting || [];
                                                 const isChecked = currentLighting.includes(light);
                                                 return (
                                                     <div key={light} className="flex flex-col gap-2">
@@ -1046,7 +1018,7 @@
                                                         </label>
                                                         {isChecked && (
                                                             <div className="pl-8">
-                                                                <input type="text" placeholder="위치 상세" className="w-full p-2 text-[10px] bg-white border-b-2 border-orange-100 outline-none font-bold" value={formData.detailsBySpace[formData.activeDetailSpace]?.lightingLocations?.[light] || ''} onChange={(e) => handleDetailLocationChange(light, e.target.value)} />
+                                                                <input type="text" placeholder="위치 상세" className="w-full p-2 text-[10px] bg-white border-b-2 border-orange-100 outline-none font-bold" value={(detail.lightingLocations || {})[light] || ''} onChange={(e) => handleDetailLocationChange(light, e.target.value)} />
                                                             </div>
                                                         )}
                                                     </div>
@@ -1057,41 +1029,51 @@
 
                                     {/* 전기 */}
                                     <div>
-                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2"><Icon name="cpu" size={16} className="text-teal-500"/> 공간 전기</h4>
+                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans"><Icon name="cpu" size={16} className="text-teal-500"/> 공간 전기</h4>
                                         <div className="space-y-3">
-                                            {['분전함 교체', '단독 배선', '일괄소등 스위치', 'IoT 적용'].map(item => (
-                                                <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${(formData.detailsBySpace[formData.activeDetailSpace]?.electrical || []).includes(item) ? 'bg-teal-500 border-teal-500 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}>
-                                                    <input type="checkbox" className="hidden" checked={(formData.detailsBySpace[formData.activeDetailSpace]?.electrical || []).includes(item)} onChange={() => toggleDetailForSpace('electrical', item)} />
-                                                    <span className="text-[11px] font-black">{item}</span>
-                                                </label>
-                                            ))}
+                                            {['분전함 교체', '단독 배선', '일괄소등 스위치', 'IoT 적용'].map(item => {
+                                                const detail = formData.detailsBySpace[formData.activeDetailSpace] || {};
+                                                const currentElectrical = detail.electrical || [];
+                                                const isChecked = currentElectrical.includes(item);
+                                                return (
+                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${isChecked ? 'bg-teal-500 border-teal-500 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}>
+                                                        <input type="checkbox" className="hidden" checked={isChecked} onChange={() => toggleDetailForSpace('electrical', item)} />
+                                                        <span className="text-[11px] font-black">{item}</span>
+                                                    </label>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 
                                     {/* 목공 */}
                                     <div>
-                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2"><Icon name="hammer" size={16} className="text-blue-400"/> 공간 목공</h4>
+                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans"><Icon name="hammer" size={16} className="text-blue-400"/> 공간 목공</h4>
                                         <div className="grid grid-cols-1 gap-2.5">
-                                            {['천장 평탄화', '가벽설치', '단열공사', '문틀보강', '아치형 개구부'].map(item => (
-                                                <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${(formData.detailsBySpace[formData.activeDetailSpace]?.carpentry || []).includes(item) ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white border-slate-100 text-slate-400'}`}><input type="checkbox" className="hidden" checked={(formData.detailsBySpace[formData.activeDetailSpace]?.carpentry || []).includes(item)} onChange={() => toggleDetailForSpace('carpentry', item)} /><span className="text-[11px] font-black">{item}</span></label>
-                                            ))}
+                                            {['천장 평탄화', '가벽설치', '단열공사', '문틀보강', '아치형 개구부'].map(item => {
+                                                const detail = formData.detailsBySpace[formData.activeDetailSpace] || {};
+                                                const currentCarpentry = detail.carpentry || [];
+                                                const isChecked = currentCarpentry.includes(item);
+                                                return (
+                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${isChecked ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white border-slate-100 text-slate-400'}`}><input type="checkbox" className="hidden" checked={isChecked} onChange={() => toggleDetailForSpace('carpentry', item)} /><span className="text-[11px] font-black">{item}</span></label>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 
                                     {/* 방문/문선 */}
                                     <div>
-                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2"><Icon name="box" size={16} className="text-purple-400"/> 방문 및 문선</h4>
+                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans"><Icon name="box" size={16} className="text-purple-400"/> 방문 및 문선</h4>
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">문선 선택</label>
-                                                <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black" value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.doorStyle || '미선택'} onChange={(e) => handleDoorDetailChange('doorStyle', e.target.value)}>
-                                                    <option value="미선택">미선택</option><option value="일반문">일반문</option><option value="9mm 문선">9mm 문선</option><option value="히든 도어">히든 도어</option>
+                                                <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-purple-400 transition-colors" value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.doorStyle || '미선택'} onChange={(e) => handleDoorDetailChange('doorStyle', e.target.value)}>
+                                                    <option value="미선택">미선택</option><option value="일반문">일반문</option><option value="9mm 문선">9mm 문선</option><option value="히든 도어">히든 도어</option><option value="무문선">무문선</option>
                                                 </select>
                                             </div>
                                             <div>
                                                 <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">도어손잡이</label>
                                                 <div className="flex gap-2">
-                                                    {['일반', '고급'].map(h => (
+                                                    {['일반', '고급(도무스)'].map(h => (
                                                         <button key={h} onClick={() => handleDoorDetailChange('doorHandle', h)} className={`flex-1 py-2 text-[10px] font-black border-2 rounded-xl transition-all ${formData.doorDetailsBySpace[formData.activeDetailSpace]?.doorHandle === h ? 'bg-purple-500 text-white border-purple-500' : 'bg-white text-slate-400 border-slate-100'}`}>{h}</button>
                                                     ))}
                                                 </div>
@@ -1099,20 +1081,20 @@
                                         </div>
                                     </div>
 
-                                    {/* 몰딩/걸레받이 */}
+                                    {/* 목공 마감 */}
                                     <div>
-                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2"><Icon name="scissors" size={16} className="text-amber-400"/> 목공 마감</h4>
+                                        <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans"><Icon name="scissors" size={16} className="text-amber-400"/> 목공 마감</h4>
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">몰딩</label>
-                                                <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black" value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.moldingType || '미선택'} onChange={(e) => handleDoorDetailChange('moldingType', e.target.value)}>
-                                                    <option value="미선택">미선택</option><option value="무몰딩">무몰딩</option><option value="일반몰딩">일반몰딩</option>
+                                                <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-amber-400 transition-colors" value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.moldingType || '미선택'} onChange={(e) => handleDoorDetailChange('moldingType', e.target.value)}>
+                                                    <option value="미선택">미선택</option><option value="무몰딩">무몰딩</option><option value="마이너스몰딩">마이너스몰딩</option><option value="일반몰딩">일반몰딩</option>
                                                 </select>
                                             </div>
                                             <div>
                                                 <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block">현관 중문</label>
-                                                <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black" value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.entranceDoor || '미선택'} onChange={(e) => handleDoorDetailChange('entranceDoor', e.target.value)}>
-                                                    <option value="미선택">미선택</option><option value="3연동">3연동</option><option value="원슬라이딩">원슬라이딩</option><option value="여닫이">여닫이</option>
+                                                <select className="w-full p-2.5 bg-white border-2 border-slate-100 rounded-xl outline-none text-xs font-black focus:border-rose-400 transition-colors" value={formData.doorDetailsBySpace[formData.activeDetailSpace]?.entranceDoor || '미선택'} onChange={(e) => handleDoorDetailChange('entranceDoor', e.target.value)}>
+                                                    <option value="미선택">미선택</option><option value="초슬림 3연동">초슬림 3연동</option><option value="원슬라이딩">원슬라이딩</option><option value="비대칭 여닫이">비대칭 여닫이</option><option value="스윙도어">스윙도어</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -1120,9 +1102,9 @@
                                 </div>
                             </div>
 
-                            {/* 전기 및 목공 요약 섹션 */}
+                            {/* 요약 섹션 */}
                             <div className="mt-8 pt-6 border-t-2 border-rose-200 bg-rose-50/30 rounded-2xl p-6">
-                                <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-4 flex items-center gap-2"><Icon name="file-text" size={14} /> 전기 및 목공 디테일 요약</p>
+                                <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-4 flex items-center gap-2"><Icon name="file-text" size={14} /> 전기 및 목공 디테일 요약 (Summary)</p>
                                 <div className="space-y-4">
                                     {Object.entries(formData.detailsBySpace).map(([space, data]) => {
                                         const doorData = formData.doorDetailsBySpace[space] || {};
@@ -1135,22 +1117,28 @@
                                                     {data.lighting?.length > 0 && <div><span className="font-bold text-orange-500">[조명]</span> {data.lighting.map(l => `${l}${data.lightingLocations?.[l] ? `(${data.lightingLocations[l]})` : ''}`).join(', ')}</div>}
                                                     {data.electrical?.length > 0 && <div><span className="font-bold text-teal-600">[전기]</span> {data.electrical.join(', ')}</div>}
                                                     {data.carpentry?.length > 0 && <div><span className="font-bold text-blue-500">[목공]</span> {data.carpentry.join(', ')}</div>}
-                                                    {doorData.doorStyle && doorData.doorStyle !== '미선택' && <div><span className="font-bold text-purple-500">[문선]</span> {doorData.doorStyle}</div>}
+                                                    {doorData.doorStyle && doorData.doorStyle !== '미선택' && <div><span className="font-bold text-purple-500">[문선]</span> {doorData.doorStyle}{doorData.doorHandle && doorData.doorHandle !== '일반' ? `, 손잡이: ${doorData.doorHandle}` : ''}</div>}
                                                     {doorData.entranceDoor && doorData.entranceDoor !== '미선택' && <div><span className="font-bold text-rose-500">[현관중문]</span> {doorData.entranceDoor}</div>}
                                                 </div>
                                             </div>
                                         );
                                     })}
+                                    {Object.entries(formData.detailsBySpace).every(([space, data]) => {
+                                        const doorData = formData.doorDetailsBySpace[space] || {};
+                                        return (data.lighting?.length || 0) === 0 && (data.electrical?.length || 0) === 0 && (data.carpentry?.length || 0) === 0 && (!doorData.doorStyle || doorData.doorStyle === '미선택') && (!doorData.entranceDoor || doorData.entranceDoor === '미선택');
+                                    }) && (
+                                        <p className="text-xs text-slate-400 italic">선택된 항목이 없습니다.</p>
+                                    )}
                                 </div>
                             </div>
                         </section>
 
-                        <footer className="py-12 text-center text-slate-300 border-t border-slate-100 mt-12 font-bold font-sans font-bold">
-                            <p className="text-xs font-black tracking-[0.4em] uppercase mb-2 font-bold">TOTODESIGN INTERIOR STUDIO</p>
-                            <p className="text-[10px] font-bold font-bold">본 시트는 상담 가이드용이며, 상세 내역은 확정 도면 및 견적서를 기준으로 합니다.</p>
+                        <footer className="py-12 text-center text-slate-300 border-t border-slate-100 mt-12 font-bold font-sans">
+                            <p className="text-xs font-black tracking-[0.4em] uppercase mb-2">TOTODESIGN INTERIOR STUDIO</p>
+                            <p className="text-[10px]">본 시트는 상담 가이드용이며, 상세 내역은 확정 도면 및 견적서를 기준으로 합니다.</p>
                         </footer>
                     </div>
-                    <button onClick={handlePrint} className="fixed bottom-6 right-6 bg-slate-900 text-white p-4 rounded-full shadow-2xl md:hidden hover:scale-110 active:scale-95 transition-all print:hidden z-50 font-bold font-sans font-bold"><Save size={24} /></button>
+                    <button onClick={handlePrint} className="fixed bottom-6 right-6 bg-slate-900 text-white p-4 rounded-full shadow-2xl md:hidden hover:scale-110 active:scale-95 transition-all print:hidden z-50"><Icon name="save" size={24} /></button>
                 </div>
             );
         };
