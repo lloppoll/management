@@ -323,16 +323,19 @@
 
             const handleDetailLocationChange = (item, value) => {
                 const space = formData.activeDetailSpace;
-                setFormData(prev => ({
-                    ...prev,
-                    detailsBySpace: {
-                        ...prev.detailsBySpace,
-                        [space]: {
-                            ...prev.detailsBySpace[space],
-                            lightingLocations: { ...prev.detailsBySpace[space].lightingLocations, [item]: value }
+                setFormData(prev => {
+                    const currentSpace = prev.detailsBySpace[space] || { lighting: [], electrical: [], carpentry: [], lightingLocations: {} };
+                    return {
+                        ...prev,
+                        detailsBySpace: {
+                            ...prev.detailsBySpace,
+                            [space]: {
+                                ...currentSpace,
+                                lightingLocations: { ...(currentSpace.lightingLocations || {}), [item]: value }
+                            }
                         }
-                    }
-                }));
+                    };
+                });
             };
 
             const handleBathChange = (type, key, value) => {
@@ -1003,7 +1006,17 @@
                                                     e.preventDefault();
                                                     e.stopPropagation();
                                                     try {
-                                                        setFormData(p => ({...p, activeDetailSpace: space}));
+                                                        setFormData(p => {
+                                                            const currentSpace = p.detailsBySpace[space] || { lighting: [], electrical: [], carpentry: [], lightingLocations: {} };
+                                                            return {
+                                                                ...p,
+                                                                activeDetailSpace: space,
+                                                                detailsBySpace: {
+                                                                    ...p.detailsBySpace,
+                                                                    [space]: currentSpace
+                                                                }
+                                                            };
+                                                        });
                                                     } catch (error) {
                                                         console.error('Error changing activeDetailSpace:', error);
                                                     }
@@ -1018,6 +1031,13 @@
                             </div>
 
                             {(() => {
+                                const currentDetails = formData.detailsBySpace[formData.activeDetailSpace] || {
+                                    lighting: [],
+                                    electrical: [],
+                                    carpentry: [],
+                                    lightingLocations: {}
+                                };
+                                
                                 const currentDoorDetails = formData.doorDetailsBySpace[formData.activeDetailSpace] || {
                                     doorStyle: '미선택',
                                     doorHandle: '일반',
@@ -1059,15 +1079,15 @@
                                                 {['메인등', '매립등(다운)', '간접 조명', '라인 조명', '실링팬'].map(light => (
                                                     <div key={light} className="flex flex-col gap-2 font-bold">
                                                         <label className="flex items-center gap-3 cursor-pointer group font-bold">
-                                                            <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${(formData.detailsBySpace[formData.activeDetailSpace]?.lighting || []).includes(light) ? 'bg-orange-400 border-orange-400 shadow-md' : 'bg-white border-slate-200'}`}>
-                                                                {(formData.detailsBySpace[formData.activeDetailSpace]?.lighting || []).includes(light) && <Zap size={10} className="text-white fill-current"/>}
+                                                            <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${(currentDetails.lighting || []).includes(light) ? 'bg-orange-400 border-orange-400 shadow-md' : 'bg-white border-slate-200'}`}>
+                                                                {(currentDetails.lighting || []).includes(light) && <Zap size={10} className="text-white fill-current"/>}
                                                             </div>
-                                                            <input type="checkbox" className="hidden" checked={(formData.detailsBySpace[formData.activeDetailSpace]?.lighting || []).includes(light)} onChange={() => toggleDetailForSpace('lighting', light)}/>
-                                                            <span className={`text-[12px] font-black ${(formData.detailsBySpace[formData.activeDetailSpace]?.lighting || []).includes(light) ? 'text-slate-800' : 'text-slate-400'}`}>{light}</span>
+                                                            <input type="checkbox" className="hidden" checked={(currentDetails.lighting || []).includes(light)} onChange={() => toggleDetailForSpace('lighting', light)}/>
+                                                            <span className={`text-[12px] font-black ${(currentDetails.lighting || []).includes(light) ? 'text-slate-800' : 'text-slate-400'}`}>{light}</span>
                                                         </label>
-                                                        {(formData.detailsBySpace[formData.activeDetailSpace]?.lighting || []).includes(light) && (
+                                                        {(currentDetails.lighting || []).includes(light) && (
                                                             <div className="pl-8">
-                                                                <input type="text" placeholder="위치 상세" className="w-full p-2 text-[10px] bg-white border-b-2 border-orange-100 focus:border-orange-300 outline-none font-bold rounded-t-lg transition-all" value={(formData.detailsBySpace[formData.activeDetailSpace]?.lightingLocations || {})[light] || ''} onChange={(e) => handleDetailLocationChange(light, e.target.value)} />
+                                                                <input type="text" placeholder="위치 상세" className="w-full p-2 text-[10px] bg-white border-b-2 border-orange-100 focus:border-orange-300 outline-none font-bold rounded-t-lg transition-all" value={(currentDetails.lightingLocations || {})[light] || ''} onChange={(e) => handleDetailLocationChange(light, e.target.value)} />
                                                             </div>
                                                         )}
                                                     </div>
@@ -1079,8 +1099,8 @@
                                             <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Cpu size={16} className="text-teal-500"/> 공간 전기 & 제어</h4>
                                             <div className="space-y-3 font-bold">
                                                 {['분전함 교체', '단독 배선', '일괄소등 스위치', 'IoT 시스템 적용'].map(item => (
-                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${(formData.detailsBySpace[formData.activeDetailSpace]?.electrical || []).includes(item) ? 'bg-teal-500 border-teal-500 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-teal-100'}`}>
-                                                        <input type="checkbox" className="hidden" checked={(formData.detailsBySpace[formData.activeDetailSpace]?.electrical || []).includes(item)} onChange={() => toggleDetailForSpace('electrical', item)} />
+                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${(currentDetails.electrical || []).includes(item) ? 'bg-teal-500 border-teal-500 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-teal-100'}`}>
+                                                        <input type="checkbox" className="hidden" checked={(currentDetails.electrical || []).includes(item)} onChange={() => toggleDetailForSpace('electrical', item)} />
                                                         <span className="text-[11px] font-black">{item}</span>
                                                     </label>
                                                 ))}
@@ -1091,7 +1111,7 @@
                                             <h4 className="text-[11px] font-black text-slate-800 mb-5 flex items-center gap-2 font-sans font-bold"><Hammer size={16} className="text-blue-400"/> 공간 목공 & 특수</h4>
                                             <div className="grid grid-cols-1 gap-2.5 font-bold">
                                                 {['천장 평탄화', '가벽설치', '단열공사', '문틀보강', '커튼박스', '웨인스코팅', '아치형 개구부'].map(item => (
-                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${(formData.detailsBySpace[formData.activeDetailSpace]?.carpentry || []).includes(item) ? 'bg-blue-500 border-blue-500 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-100'}`}><input type="checkbox" className="hidden" checked={(formData.detailsBySpace[formData.activeDetailSpace]?.carpentry || []).includes(item)} onChange={() => toggleDetailForSpace('carpentry', item)} /><span className="text-[11px] font-black">{item}</span></label>
+                                                    <label key={item} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer font-bold ${(currentDetails.carpentry || []).includes(item) ? 'bg-blue-500 border-blue-500 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-100'}`}><input type="checkbox" className="hidden" checked={(currentDetails.carpentry || []).includes(item)} onChange={() => toggleDetailForSpace('carpentry', item)} /><span className="text-[11px] font-black">{item}</span></label>
                                                 ))}
                                             </div>
                                         </div>
